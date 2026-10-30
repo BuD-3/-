@@ -153,6 +153,7 @@ jobs:
           DEVICE="${{ steps.sim.outputs.device }}"
           BUNDLE="com.kaoyan.workbench"
           mkdir -p screenshots
+
           # 0=今日 1=计划 2=错题 3=进度 4=我的
           NAMES=("01-today" "02-plan" "03-review" "04-progress" "05-profile")
           for i in 0 1 2 3 4; do
@@ -160,11 +161,19 @@ jobs:
             echo "--- 截取 $NAME (tab=$i) ---"
             xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
             sleep 1
-            xcrun simctl launch "$DEVICE" "$BUNDLE" --tab "$i"
+            xcrun simctl launch "$DEVICE" "$BUNDLE" --tab "$i" --seed-demo
             sleep 6
             xcrun simctl io "$DEVICE" screenshot "screenshots/$NAME.png"
             ls -la "screenshots/$NAME.png"
           done
+
+          echo "--- 截取 06-library (资料库) ---"
+          xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
+          sleep 1
+          xcrun simctl launch "$DEVICE" "$BUNDLE" --library-preview --seed-demo
+          sleep 6
+          xcrun simctl io "$DEVICE" screenshot "screenshots/06-library.png"
+
           echo "=== 全部截图 ==="
           ls -la screenshots/
 

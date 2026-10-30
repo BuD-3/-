@@ -11,6 +11,7 @@ struct TodayView: View {
     @EnvironmentObject private var store: AppStore
     @State private var showingReflection = false
     @State private var reflectionDraft = ""
+    @State private var showingComposer = false
 
     private var today: Date { Date() }
     private var blocks: [ScheduleBlock] { DailySchedule.blocks(for: today) }
@@ -32,6 +33,7 @@ struct TodayView: View {
                     }
 
                     timetableCard
+                    materialCard
                     if !record.reflection.isEmpty {
                         reflectionPreview
                     }
@@ -61,6 +63,15 @@ struct TodayView: View {
                     showingReflection = false
                 }
                 .presentationDetents([.medium, .large])
+            }
+            .sheet(isPresented: $showingComposer) {
+                MaterialComposer(
+                    editing: nil,
+                    presetDate: today,
+                    presetItem: nil,
+                    onSave: { store.addMaterial($0) },
+                    availableProgressItems: store.progressItems
+                )
             }
         }
     }
@@ -392,6 +403,99 @@ struct TodayView: View {
             .labelsHidden()
         }
         .padding(.top, 4)
+    }
+
+    // MARK: - 今日上传的学习内容
+
+    private var todayMaterials: [StudyMaterial] { store.materials(on: today) }
+
+    private var materialCard: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("今天学过什么")
+                            .font(.headline)
+                        Text("拍张笔记、传个 PDF，或者写几句小结")
+                            .font(.caption)
+                            .foregroundStyle(Theme.secondaryLabel)
+                    }
+                    Spacer()
+                    Button {
+                        showingComposer = true
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title3)
+                    }
+                    .accessibilityLabel("上传今天的学习内容")
+                }
+
+                if todayMaterials.isEmpty {
+                    Button {
+                        showingComposer = true
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "tray.and.arrow.down")
+                                .font(.title3)
+                                .foregroundStyle(Theme.accent)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("还没有记录")
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(Theme.label)
+                                Text("点这里上传今天学的资料")
+                                    .font(.caption2)
+                                    .foregroundStyle(Theme.tertiaryLabel)
+                            }
+                            Spacer()
+                        }
+                        .padding(12)
+                        .background(Theme.tertiaryCard)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(todayMaterials) { material in
+                            NavigationLink {
+                                MaterialDetailView(materialID: material.id)
+                            } label: {
+                                materialRow(material)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func materialRow(_ material: StudyMaterial) -> some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(Theme.accent.opacity(0.10))
+                    .frame(width: 36, height: 36)
+                Image(systemName: material.kind.symbolName)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Theme.accent)
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(material.title)
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(Theme.label)
+                    .lineLimit(1)
+                Text(material.summary)
+                    .font(.caption2)
+                    .foregroundStyle(Theme.tertiaryLabel)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(Theme.tertiaryLabel)
+        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
     }
 
     // MARK: - 复盘预览

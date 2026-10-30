@@ -124,6 +124,37 @@ struct ProfileView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            NavigationLink {
+                LibraryView()
+            } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Color(red: 0.55, green: 0.32, blue: 0.86).opacity(0.13))
+                            .frame(width: 36, height: 36)
+                        Image(systemName: "books.vertical.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(Color(red: 0.55, green: 0.32, blue: 0.86))
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("资料库")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.label)
+                        Text("\(store.totalMaterialCount) 份 · \(store.totalMaterialSize) · PDF / 图片 / 文字")
+                            .font(.caption2)
+                            .foregroundStyle(Theme.secondaryLabel)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.tertiaryLabel)
+                }
+                .padding(14)
+                .background(Theme.card)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+            }
+            .buttonStyle(.plain)
         }
     }
 

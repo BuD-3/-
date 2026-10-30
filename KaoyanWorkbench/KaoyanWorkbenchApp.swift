@@ -39,28 +39,41 @@ struct RootView: View {
         return value
     }
 
+    /// 自动化截图专用：直接把资料库当作根视图打开
+    static var isLibraryPreview: Bool {
+        ProcessInfo.processInfo.arguments.contains("--library-preview")
+    }
+
     var body: some View {
-        TabView(selection: $selection) {
-            TodayView()
-                .tabItem { Label("今日", systemImage: "sun.max.fill") }
-                .tag(0)
+        Group {
+            if RootView.isLibraryPreview {
+                NavigationStack {
+                    LibraryView()
+                }
+            } else {
+                TabView(selection: $selection) {
+                    TodayView()
+                        .tabItem { Label("今日", systemImage: "sun.max.fill") }
+                        .tag(0)
 
-            PlanView()
-                .tabItem { Label("计划", systemImage: "calendar") }
-                .tag(1)
+                    PlanView()
+                        .tabItem { Label("计划", systemImage: "calendar") }
+                        .tag(1)
 
-            ReviewView()
-                .tabItem { Label("错题", systemImage: "arrow.triangle.2.circlepath") }
-                .badge(store.dueWeekReviews.count)
-                .tag(2)
+                    ReviewView()
+                        .tabItem { Label("错题", systemImage: "arrow.triangle.2.circlepath") }
+                        .badge(store.dueWeekReviews.count)
+                        .tag(2)
 
-            ProgressView()
-                .tabItem { Label("进度", systemImage: "chart.bar.fill") }
-                .tag(3)
+                    ProgressView()
+                        .tabItem { Label("进度", systemImage: "chart.bar.fill") }
+                        .tag(3)
 
-            ProfileView()
-                .tabItem { Label("我的", systemImage: "person.crop.circle") }
-                .tag(4)
+                    ProfileView()
+                        .tabItem { Label("我的", systemImage: "person.crop.circle") }
+                        .tag(4)
+                }
+            }
         }
     }
 }

@@ -10,6 +10,7 @@ import SwiftUI
 struct ProgressView: View {
     @EnvironmentObject private var store: AppStore
     @State private var expandedSubjects: Set<Subject> = Set(Subject.allCases)
+    @State private var libraryTarget: ProgressItem?
 
     var body: some View {
         NavigationStack {
@@ -30,6 +31,9 @@ struct ProgressView: View {
             .background(Theme.background)
             .navigationTitle("进度")
             .navigationBarTitleDisplayMode(.large)
+            .sheet(item: $libraryTarget) { item in
+                ProgressMaterialsSheet(item: item)
+            }
         }
     }
 
@@ -209,33 +213,57 @@ struct ProgressView: View {
     }
 
     private func progressRow(_ item: ProgressItem, subject: Subject) -> some View {
-        Button {
-            withAnimation(.easeOut(duration: 0.15)) {
-                store.toggleProgress(item)
-            }
-        } label: {
-            HStack(alignment: .top, spacing: 9) {
-                Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 17))
-                    .foregroundStyle(item.isDone ? Theme.color(for: subject) : Theme.tertiaryLabel)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.title)
-                        .font(.footnote)
-                        .foregroundStyle(item.isDone ? Theme.tertiaryLabel : Theme.label)
-                        .strikethrough(item.isDone, color: Theme.tertiaryLabel)
-                        .multilineTextAlignment(.leading)
-                    Text(itemMood(item, planMonths: item.planMonths))
-                        .font(.caption2)
-                        .foregroundStyle(Theme.tertiaryLabel)
+        HStack(alignment: .top, spacing: 6) {
+            Button {
+                withAnimation(.easeOut(duration: 0.15)) {
+                    store.toggleProgress(item)
                 }
-                Spacer(minLength: 0)
+            } label: {
+                HStack(alignment: .top, spacing: 9) {
+                    Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 17))
+                        .foregroundStyle(item.isDone ? Theme.color(for: subject) : Theme.tertiaryLabel)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.title)
+                            .font(.footnote)
+                            .foregroundStyle(item.isDone ? Theme.tertiaryLabel : Theme.label)
+                            .strikethrough(item.isDone, color: Theme.tertiaryLabel)
+                            .multilineTextAlignment(.leading)
+                        Text(itemMood(item, planMonths: item.planMonths))
+                            .font(.caption2)
+                            .foregroundStyle(Theme.tertiaryLabel)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 7)
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+
+            // 该章节下的资料数量 / 入口
+            Button {
+                libraryTarget = item
+            } label: {
+                HStack(spacing: 3) {
+                    Image(systemName: "paperclip")
+                        .font(.system(size: 11))
+                    let count = store.materialCount(forProgressItem: item.id)
+                    if count > 0 {
+                        Text("\(count)")
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                }
+                .foregroundStyle(store.materialCount(forProgressItem: item.id) > 0 ? Theme.accent : Theme.tertiaryLabel)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 4)
+                .background(Theme.tertiaryCard)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("查看该章节资料")
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 7)
     }
 
     /// 计划月份的提示文字：已过期待补 / 本月 / 未来

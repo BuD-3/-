@@ -20,6 +20,7 @@ final class AppStore: ObservableObject {
         static let budget = "budget"
         static let todos = "todos"
         static let settings = "settings"
+        static let materials = "materials"
     }
 
     // MARK: - 数据
@@ -29,6 +30,7 @@ final class AppStore: ObservableObject {
     @Published private(set) var progressItems: [ProgressItem] = []
     @Published private(set) var budgetEntries: [BudgetEntry] = []
     @Published private(set) var todos: [TodoItem] = []
+    @Published private(set) var materials: [StudyMaterial] = []
     @Published var settings: AppSettings = AppSettings()
 
     private var cancellables = Set<AnyCancellable>()
@@ -40,6 +42,48 @@ final class AppStore: ObservableObject {
         load()
         bindAutosave()
         isLoaded = true
+        seedScreenshotDemoIfRequested()
+    }
+
+    /// 仅用于 CI 自动化截图：启动参数 --seed-demo 时塞几条示例资料。
+    /// 正常使用不会触发。
+    private func seedScreenshotDemoIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("--seed-demo") else { return }
+        guard materials.isEmpty else { return }
+
+        let todayKey = DateKey.key(for: Date())
+        let mathItem = progressItems.first { $0.subject == .math }
+        let csItem = progressItems.first { $0.subject == .cs408 }
+
+        materials = [
+            StudyMaterial(
+                title: "同济第1章 极限笔记",
+                kind: .text,
+                body: "1^∞ 型先取对数再等价无穷小，别直接代换。\n洛必达只在 0/0 或 ∞/∞ 可用，用前先验证。",
+                note: "第 1 章 第 3 节，课上没听懂的那道例题",
+                subject: .math,
+                progressItemID: mathItem?.id,
+                dateKey: todayKey
+            ),
+            StudyMaterial(
+                title: "408 绪论 · 线性表小结",
+                kind: .text,
+                body: "顺序表随机访问 O(1)，插入删除 O(n)；链表反之。\n考选择题时特别注意「平均」和「最坏」的区别。",
+                note: "王道第 1-2 章",
+                subject: .cs408,
+                progressItemID: csItem?.id,
+                dateKey: todayKey
+            ),
+            StudyMaterial(
+                title: "长难句拆句练习",
+                kind: .text,
+                body: "主句 + 定语从句 + 状语。先找谓语动词，再定位连词。",
+                note: "每天 2 句",
+                subject: .english,
+                progressItemID: nil,
+                dateKey: todayKey
+            )
+        ]
     }
 
     private func load() {
@@ -48,6 +92,7 @@ final class AppStore: ObservableObject {
         progressItems = Persistence.shared.load([ProgressItem].self, from: Key.progress) ?? SeedData.progressItems()
         budgetEntries = Persistence.shared.load([BudgetEntry].self, from: Key.budget) ?? []
         todos = Persistence.shared.load([TodoItem].self, from: Key.todos) ?? []
+        materials = Persistence.shared.load([StudyMaterial].self, from: Key.materials) ?? []
         settings = Persistence.shared.load(AppSettings.self, from: Key.settings) ?? AppSettings()
     }
 
@@ -70,6 +115,10 @@ final class AppStore: ObservableObject {
 
         $todos.dropFirst().sink { value in
             Persistence.shared.save(value, to: Key.todos)
+        }.store(in: &cancellables)
+
+        $materials.dropFirst().sink { value in
+            Persistence.shared.save(value, to: Key.materials)
         }.store(in: &cancellables)
 
         $settings.dropFirst().sink { value in
@@ -489,6 +538,80 @@ final class AppStore: ObservableObject {
             .map { $0 }
     }
 
+    // MARK: - 资料库
+
+    func addMaterial(_ material: StudyMaterial) {
+        var copy = material
+        if copy.createdAt > Date().addingTimeInterval(60) { copy.createdAt = Date() }
+        materials.insert(copy, at: 0)
+    }
+
+    func updateMaterial(_ material: StudyMaterial) {
+        if let idx = materials.firstIndex(where: { $0.id == material.id }) {
+            materials[idx] = material
+        }
+    }
+
+    func deleteMaterial(_ material: StudyMaterial) {
+        if let fileName = material.fileName {
+            MaterialStorage.delete(fileName: fileName)
+        }
+        materials.removeAll { $0.id == material.id }
+    }
+
+    /// 某一天上传的资料
+    func materials(on date: Date) -> [StudyMaterial] {
+        let key = DateKey.key(for: date)
+        return materials
+            .filter { $0.dateKey == key }
+            .sorted { $0.createdAt > $1.createdAt }
+    }
+
+    /// 某个进度项（章节）下的资料
+    func materials(forProgressItem id: UUID) -> [StudyMaterial] {
+        materials
+            .filter { $0.progressItemID == id }
+            .sorted { $0.createdAt > $1.createdAt }
+    }
+
+    func materialCount(forProgressItem id: UUID) -> Int {
+        materials.reduce(0) { $0 + ($1.progressItemID == id ? 1 : 0) }
+    }
+
+    var totalMaterialCount: Int { materials.count }
+
+    var totalMaterialSize: String {
+        MaterialStorage.formattedSize(MaterialStorage.totalSize())
+    }
+
+    /// 按科目筛选（nil 表示不筛选）
+    func filteredMaterials(subject: Subject?, query: String) -> [StudyMaterial] {
+        var list = materials
+        if let subject {
+            list = list.filter { $0.subject == subject }
+        }
+        let keyword = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !keyword.isEmpty {
+            list = list.filter {
+                $0.title.localizedCaseInsensitiveContains(keyword)
+                || $0.note.localizedCaseInsensitiveContains(keyword)
+                || $0.body.localizedCaseInsensitiveContains(keyword)
+            }
+        }
+        return list.sorted { $0.createdAt > $1.createdAt }
+    }
+
+    /// 供 UI 选择「关联章节」用
+    func progressItems(for subject: Subject?) -> [ProgressItem] {
+        guard let subject else { return progressItems }
+        return progressItems.filter { $0.subject == subject }
+    }
+
+    func progressItem(with id: UUID?) -> ProgressItem? {
+        guard let id else { return nil }
+        return progressItems.first { $0.id == id }
+    }
+
     // MARK: - 数据管理
 
     func resetProgressToSeed() {
@@ -496,11 +619,17 @@ final class AppStore: ObservableObject {
     }
 
     func clearAllData() {
+        for material in materials {
+            if let fileName = material.fileName {
+                MaterialStorage.delete(fileName: fileName)
+            }
+        }
         checkIns = [:]
         mistakes = []
         progressItems = SeedData.progressItems()
         budgetEntries = []
         todos = []
+        materials = []
         settings = AppSettings()
     }
 }
