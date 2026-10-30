@@ -118,7 +118,7 @@ struct TodayView: View {
                     title: "累计专注",
                     value: ClockFormatter.hoursText(store.totalStudyHours),
                     symbol: "clock.fill",
-                    tint: Theme.color(for: .math)
+                    tint: Theme.color(for: Subject.math)
                 )
             }
 
@@ -316,7 +316,7 @@ struct TodayView: View {
                     VStack(spacing: 0) {
                         ZStack {
                             Circle()
-                                .fill(isDone ? Theme.color(for: block.kind) : Theme.color(for: block.kind).opacity(0.12))
+                                .fill(isDone ? Theme.color(of: block.kind) : Theme.color(of: block.kind).opacity(0.12))
                                 .frame(width: 22, height: 22)
                             if isDone {
                                 Image(systemName: "checkmark")
@@ -324,7 +324,7 @@ struct TodayView: View {
                                     .foregroundStyle(.white)
                             } else {
                                 Circle()
-                                    .fill(Theme.color(for: block.kind))
+                                    .fill(Theme.color(of: block.kind))
                                     .frame(width: 6, height: 6)
                             }
                         }

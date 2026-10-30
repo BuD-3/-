@@ -29,11 +29,15 @@ enum Theme {
         }
     }
 
-    static func color(for kind: ScheduleBlockKind) -> Color {
+    /// 课表区块的颜色。
+    /// 刻意命名为 `color(of:)` 而不是与 `color(for:)` 重载：
+    /// 两者都有 `.math/.cs408/.english` 这些 case，同名的 `color(for:)` 会让
+    /// `Theme.color(for: .math)` 产生 ambiguous use 编译错误。
+    static func color(of kind: ScheduleBlockKind) -> Color {
         switch kind {
-        case .math: return color(for: .math)
-        case .cs408: return color(for: .cs408)
-        case .english: return color(for: .english)
+        case .math: return color(for: Subject.math)
+        case .cs408: return color(for: Subject.cs408)
+        case .english: return color(for: Subject.english)
         case .review: return Color(red: 0.85, green: 0.55, blue: 0.12)
         case .rest: return Color(uiColor: .systemGray)
         case .flexible: return Color(red: 0.42, green: 0.60, blue: 0.30)
