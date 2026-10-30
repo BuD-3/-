@@ -103,3 +103,21 @@ KaoyanWorkbench/
 3. **数据只存本机**（Documents/WorkbenchData），随 iCloud 备份，不联网、不上传。
 4. 没有做通知推送。错题回炉提醒是「打开 App 时看到到期队列」，不是手机弹窗；
    需要真弹窗的话我可以加 `UserNotifications`。
+
+## 云端编译（不需要本地有 Mac）
+
+工程已带 `.github/workflows/ios-build.yml`：推到 GitHub 后，
+每次 push 都会在 **macOS 15 + Xcode 16** 的云端机器上跑一次 `xcodebuild build`
+（模拟器目标、不签名），把编译器能看见的错误全部摊开。
+
+会做四件事：
+
+1. 打印 Xcode / Swift 版本
+2. `plutil -lint` 校验 `project.pbxproj` 格式
+3. `xcodebuild -list` 确认 scheme 能被识别
+4. `xcodebuild build` 真编译，失败时把 `error:` 行和第一处上下文单独打印，
+   并把完整 `build.log` 作为工件上传
+
+看结果的地方：仓库 → **Actions** 标签页 → 点最新一次运行 →
+失败时展开「提取编译错误」，或用「xcodebuild-log」工件下载完整日志。
+
