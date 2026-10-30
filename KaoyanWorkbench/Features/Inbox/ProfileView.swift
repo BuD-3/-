@@ -153,7 +153,7 @@ struct ProfileView: View {
                         Text("资料库")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Theme.label)
-                        Text("\(store.totalMaterialCount) 份 · \(store.totalMaterialSize) · PDF / 图片 / 文字")
+                        Text(librarySubtitle)
                             .font(.caption2)
                             .foregroundStyle(Theme.secondaryLabel)
                     }
@@ -168,6 +168,15 @@ struct ProfileView: View {
             }
             .buttonStyle(.plain)
         }
+    }
+
+    /// 资料库入口的副标题：没有附件文件时不显示「0 KB」
+    private var librarySubtitle: String {
+        let count = "\(store.totalMaterialCount) 份"
+        if store.totalMaterialBytes > 0 {
+            return count + " · \(store.totalMaterialSize) · PDF / 图片 / 文字"
+        }
+        return count + " · PDF / 图片 / 文字"
     }
 
     private func moduleTile(title: String, subtitle: String, symbol: String, tint: Color) -> some View {
