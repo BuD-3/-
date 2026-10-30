@@ -23,25 +23,37 @@ struct TodayView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: Theme.spacing) {
-                    countdownCard
-                    stageCard
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: Theme.spacing) {
+                        countdownCard
+                        stageCard
 
-                    if CalendarHelper.isSunday(today) {
-                        sundayCard
-                    }
+                        if CalendarHelper.isSunday(today) {
+                            sundayCard
+                        }
 
-                    timetableCard
-                    materialCard
-                    if !record.reflection.isEmpty {
-                        reflectionPreview
+                        timetableCard
+                        materialCard
+                            .id("materials")
+                        if !record.reflection.isEmpty {
+                            reflectionPreview
+                        }
+                        weekSummaryCard
+                        navigationHintCard
                     }
-                    weekSummaryCard
-                    navigationHintCard
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .onAppear {
+                    // 仅自动化截图用：直接把「今天学过什么」滚到可见位置
+                    guard ProcessInfo.processInfo.arguments.contains("--focus-materials") else { return }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            proxy.scrollTo("materials", anchor: .top)
+                        }
+                    }
+                }
             }
             .background(Theme.background)
             .navigationTitle("今日")

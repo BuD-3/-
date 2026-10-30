@@ -101,7 +101,7 @@ struct LibraryView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("资料库")
                     .font(.headline)
-                Text("共 \(store.totalMaterialCount) 份 · 占用 \(store.totalMaterialSize)")
+                Text(summaryLine)
                     .font(.caption)
                     .foregroundStyle(Theme.secondaryLabel)
             }
@@ -114,6 +114,15 @@ struct LibraryView: View {
                     .foregroundStyle(Theme.accent)
             }
         }
+    }
+
+    /// 没有附件文件时不显示「占用 0 KB」这种噪音
+    private var summaryLine: String {
+        let base = "共 \(store.totalMaterialCount) 份"
+        if store.totalMaterialBytes > 0 {
+            return base + " · 占用 \(store.totalMaterialSize)"
+        }
+        return base
     }
 
     private var kindChips: some View {

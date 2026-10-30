@@ -580,8 +580,10 @@ final class AppStore: ObservableObject {
 
     var totalMaterialCount: Int { materials.count }
 
+    var totalMaterialBytes: Int64 { MaterialStorage.totalSize() }
+
     var totalMaterialSize: String {
-        MaterialStorage.formattedSize(MaterialStorage.totalSize())
+        MaterialStorage.formattedSize(totalMaterialBytes)
     }
 
     /// 按科目筛选（nil 表示不筛选）
