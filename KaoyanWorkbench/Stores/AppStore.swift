@@ -147,14 +147,22 @@ final class AppStore: ObservableObject {
         checkIns[DateKey.key(for: date)]?.completedBlockIDs ?? []
     }
 
-    /// 某天的有效学习小时数（勾选的课表块 + 补记）
+    /// 某天的有效学习小时数（勾选的核心课表块 + 补记）
     func studyHours(on date: Date) -> Double {
         let record = checkIns[DateKey.key(for: date)] ?? DayCheckIn.empty(dateKey: DateKey.key(for: date))
         let blocks = DailySchedule.blocks(for: date)
         let fromBlocks = blocks
-            .filter { $0.kind.countsAsStudy && record.completedBlockIDs.contains($0.id) }
+            .filter { $0.kind.countsAsStudy && $0.countsTowardBaseline && record.completedBlockIDs.contains($0.id) }
             .reduce(0.0) { $0 + $1.durationHours }
         return fromBlocks + Double(record.extraStudyMinutes) / 60.0
+    }
+
+    /// 某天已完成的碎片时长（单词等，不计入基准）
+    func fragmentHours(on date: Date) -> Double {
+        let record = checkIns[DateKey.key(for: date)] ?? DayCheckIn.empty(dateKey: DateKey.key(for: date))
+        return DailySchedule.blocks(for: date)
+            .filter { $0.kind.countsAsStudy && !$0.countsTowardBaseline && record.completedBlockIDs.contains($0.id) }
+            .reduce(0.0) { $0 + $1.durationHours }
     }
 
     func plannedHours(on date: Date) -> Double {
@@ -209,13 +217,13 @@ final class AppStore: ObservableObject {
         return count
     }
 
-    /// 累计学习小时数（自备考启动以来）
+    /// 累计学习小时数（自备考启动以来，对齐 9.5 小时/天 基准）
     var totalStudyHours: Double {
         checkIns.values.reduce(0) { sum, record in
             guard let date = DateKey.date(from: record.dateKey) else { return sum }
             let blocks = DailySchedule.blocks(for: date)
             let hours = blocks
-                .filter { $0.kind.countsAsStudy && record.completedBlockIDs.contains($0.id) }
+                .filter { $0.kind.countsAsStudy && $0.countsTowardBaseline && record.completedBlockIDs.contains($0.id) }
                 .reduce(0.0) { $0 + $1.durationHours }
             return sum + hours + Double(record.extraStudyMinutes) / 60.0
         }
@@ -316,10 +324,24 @@ final class AppStore: ObservableObject {
         return order.map { ModuleGroup(module: $0, items: map[$0] ?? []) }
     }
 
-    /// 依据当前月份，给出这个月应该推进的进度项
+    /// 依据当前月份，给出这个月应该推进的进度项。
+    /// 备考尚未开始时（今天早于 2026-11-01），回落到计划起点那个月，
+    /// 避免打开 App 看到「0 项」不知所措。
     func currentMonthFocus() -> [ProgressItem] {
-        let key = CalendarHelper.monthKey(Date())
-        return progressItems.filter { $0.planMonthList.contains(key) && !$0.isDone }
+        let now = Date()
+        let key = CalendarHelper.monthKey(now)
+        let current = progressItems.filter { $0.planMonthList.contains(key) && !$0.isDone }
+        if !current.isEmpty { return current }
+        if now < PlanTimeline.startDate {
+            let startKey = CalendarHelper.monthKey(PlanTimeline.startDate)
+            return progressItems.filter { $0.planMonthList.contains(startKey) && !$0.isDone }
+        }
+        return []
+    }
+
+    /// 当前焦点是否为「备考启动前」的预读
+    var isBeforePlanStart: Bool {
+        Date() < PlanTimeline.startDate
     }
 
     // MARK: - 预算

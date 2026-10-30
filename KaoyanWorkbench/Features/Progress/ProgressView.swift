@@ -82,10 +82,11 @@ struct ProgressView: View {
 
     private var monthFocusCard: some View {
         let focus = store.currentMonthFocus()
+        let beforeStart = store.isBeforePlanStart
         return Card {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Label("本月该推进", systemImage: "scope")
+                    Label(beforeStart ? "启动月该推进" : "本月该推进", systemImage: beforeStart ? "flag.checkered" : "scope")
                         .font(.subheadline.weight(.semibold))
                     Spacer()
                     Text("\(focus.count) 项")
@@ -93,8 +94,15 @@ struct ProgressView: View {
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
 
+                if beforeStart {
+                    Text("备考 2026-11-01 启动，下面是首月任务。现在可以先翻翻高数和数据结构第一章。")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.secondaryLabel)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
                 if focus.isEmpty {
-                    Text("本月计划项已全部勾完，或本月无计划项。去看看下个月的任务。")
+                    Text(beforeStart ? "启动月任务已全部勾完。" : "本月计划项已全部勾完。")
                         .font(.caption)
                         .foregroundStyle(Theme.secondaryLabel)
                 } else {

@@ -261,6 +261,10 @@ struct ScheduleBlock: Identifiable, Codable, Hashable {
     let title: String
     let detail: String
     let kind: ScheduleBlockKind
+    /// 是否计入「有效学习时长」基准（9.5 小时/天）。
+    /// 早上「起床·早餐·单词 100」与晚上「单词二刷」属于碎片时间，
+    /// 单独统计而不计入基准——这样每日计划时长才与表里 9.5 小时一致。
+    var countsTowardBaseline: Bool = true
 
     var durationMinutes: Int { max(0, endMinute - startMinute) }
     var durationHours: Double { Double(durationMinutes) / 60.0 }
@@ -274,7 +278,8 @@ enum DailySchedule {
     static let weekdayBlocks: [ScheduleBlock] = [
         ScheduleBlock(id: "w-morning-wake", startMinute: 6 * 60 + 40, endMinute: 7 * 60 + 20,
                       title: "起床 · 早餐 · 英语单词 100 个",
-                      detail: "单词放在早上，不占用大块时间", kind: .english),
+                      detail: "单词放在早上，不占用大块时间", kind: .english,
+                      countsTowardBaseline: false),
         ScheduleBlock(id: "w-reading", startMinute: 7 * 60 + 20, endMinute: 8 * 60 + 50,
                       title: "英语：长难句 / 阅读精读",
                       detail: "1.5 小时，脑子最清醒之一", kind: .english),
@@ -295,7 +300,8 @@ enum DailySchedule {
                       detail: "当天错题当天清，不过夜", kind: .review),
         ScheduleBlock(id: "w-words2", startMinute: 20 * 60 + 30, endMinute: 21 * 60 + 30,
                       title: "英语单词二刷 + 明日计划",
-                      detail: "10 分钟写当日复盘，3 行即可", kind: .english),
+                      detail: "10 分钟写当日复盘，3 行即可", kind: .english,
+                      countsTowardBaseline: false),
         ScheduleBlock(id: "w-flex", startMinute: 21 * 60 + 30, endMinute: 22 * 60 + 30,
                       title: "弹性时间（补进度 / 放松）",
                       detail: "不安排硬任务，防止透支", kind: .flexible)
@@ -318,9 +324,19 @@ enum DailySchedule {
         CalendarHelper.isSunday(date) ? sundayBlocks : weekdayBlocks
     }
 
-    /// 有效学习时长（小时/天）
+    /// 有效学习时长（小时/天），对齐表里「约 9.5 小时/天」的基准。
+    /// 只统计核心区块，不含单词碎片。
     static func studyHours(for date: Date) -> Double {
-        blocks(for: date).filter { $0.kind.countsAsStudy }.reduce(0) { $0 + $1.durationHours }
+        blocks(for: date)
+            .filter { $0.kind.countsAsStudy && $0.countsTowardBaseline }
+            .reduce(0) { $0 + $1.durationHours }
+    }
+
+    /// 碎片时间（单词等），不计入基准但可勾选
+    static func fragmentHours(for date: Date) -> Double {
+        blocks(for: date)
+            .filter { $0.kind.countsAsStudy && !$0.countsTowardBaseline }
+            .reduce(0) { $0 + $1.durationHours }
     }
 }
 
