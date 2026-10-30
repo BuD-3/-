@@ -1,4 +1,4 @@
-﻿> 这是 iOS 原生 SwiftUI 工程（你需要一台 Mac + Xcode 才能编译安装）。
+> 这是 iOS 原生 SwiftUI 工程（你需要一台 Mac + Xcode 才能编译安装）。
 
 # 考研工作台 · KaoyanWorkbench
 
@@ -82,6 +82,18 @@
 | 预算 / 资料清单 | `05 两万块预算` |
 | 错题回炉逻辑 | `06 错题本` |
 | 倒计时 / 节点 / 目标分 | `01 总览` |
+
+## App 图标
+
+文件：`KaoyanWorkbench/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`
+（1024×1024，RGB 无 alpha，符合 App Store 要求）
+
+图标由 `tools/make_icon.py` 用 Pillow 纯几何绘制生成 —— 蓝紫渐变底 + 白色学士帽 + 对勾徽章。
+不依赖任何字体，所以任何环境都能复现。改配色或形状后重新生成：
+
+```bash
+python tools/make_icon.py
+```
 
 ## 工程结构
 
