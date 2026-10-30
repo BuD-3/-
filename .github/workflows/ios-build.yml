@@ -181,6 +181,11 @@ jobs:
           sleep 7
           xcrun simctl io "$DEVICE" screenshot "screenshots/07-today-materials.png"
 
+          echo "--- 截取 08-home (桌面图标) ---"
+          xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
+          sleep 4
+          xcrun simctl io "$DEVICE" screenshot "screenshots/08-home.png"
+
           echo "=== 全部截图 ==="
           ls -la screenshots/
 
