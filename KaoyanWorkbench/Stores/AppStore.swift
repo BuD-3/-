@@ -43,6 +43,7 @@ final class AppStore: ObservableObject {
         bindAutosave()
         isLoaded = true
         seedScreenshotDemoIfRequested()
+        refreshReminders()
     }
 
     /// 仅用于 CI 自动化截图：启动参数 --seed-demo 时塞几条示例资料。
@@ -276,6 +277,7 @@ final class AppStore: ObservableObject {
         var copy = mistake
         copy.createdAt = Date()
         mistakes.insert(copy, at: 0)
+        refreshReminders()
     }
 
     func updateMistake(_ mistake: Mistake) {
@@ -286,6 +288,7 @@ final class AppStore: ObservableObject {
 
     func deleteMistake(_ mistake: Mistake) {
         mistakes.removeAll { $0.id == mistake.id }
+        refreshReminders()
     }
 
     /// 回炉①：当日回炉
@@ -293,6 +296,7 @@ final class AppStore: ObservableObject {
         guard let idx = mistakes.firstIndex(where: { $0.id == mistake.id }) else { return }
         mistakes[idx].didSameDayReview = true
         mistakes[idx].sameDayReviewedAt = Date()
+        refreshReminders()
     }
 
     /// 回炉②：第 7 天回炉
@@ -300,6 +304,7 @@ final class AppStore: ObservableObject {
         guard let idx = mistakes.firstIndex(where: { $0.id == mistake.id }) else { return }
         mistakes[idx].didWeekReview = true
         mistakes[idx].weekReviewedAt = Date()
+        refreshReminders()
     }
 
     func undoReviews(_ mistake: Mistake) {
@@ -308,6 +313,7 @@ final class AppStore: ObservableObject {
         mistakes[idx].didWeekReview = false
         mistakes[idx].sameDayReviewedAt = nil
         mistakes[idx].weekReviewedAt = nil
+        refreshReminders()
     }
 
     /// 今日需要回炉的错题（当日回炉 + 到期回炉②）
@@ -614,6 +620,49 @@ final class AppStore: ObservableObject {
         return progressItems.first { $0.id == id }
     }
 
+    // MARK: - 提醒
+
+    /// 按当前设置与错题状态重建本地通知
+    func refreshReminders() {
+        let snapshot = mistakes
+        let hour = settings.reminderHour
+        let enabled = settings.remindersEnabled
+        Task {
+            await NotificationManager.shared.syncReviewReminders(
+                mistakes: snapshot, hour: hour, enabled: enabled
+            )
+        }
+    }
+
+    /// 开关回炉提醒。开启时会请求系统授权；被拒绝则自动关回去。
+    func setRemindersEnabled(_ enabled: Bool) {
+        settings.remindersEnabled = enabled
+        guard enabled else {
+            Task { await NotificationManager.shared.clearAllReviewReminders() }
+            return
+        }
+        Task {
+            let granted = await NotificationManager.shared.requestAuthorization()
+            if !granted {
+                settings.remindersEnabled = false
+            }
+            refreshReminders()
+        }
+    }
+
+    func setReminderHour(_ hour: Int) {
+        settings.reminderHour = max(0, min(23, hour))
+        refreshReminders()
+    }
+
+    func reminderPermission() async -> ReminderPermission {
+        await NotificationManager.shared.currentPermission()
+    }
+
+    func pendingReminderCount() async -> Int {
+        await NotificationManager.shared.pendingReviewCount()
+    }
+
     // MARK: - 数据管理
 
     func resetProgressToSeed() {
@@ -643,6 +692,22 @@ struct AppSettings: Codable {
     var showSundayRestCard: Bool = true
     /// 初试日期（可用来自定义，默认 2027-12-18）
     var examDateOverride: Date?
+    /// 错题第 7 天回炉提醒
+    var remindersEnabled: Bool = false
+    /// 提醒时间（小时，0...23）
+    var reminderHour: Int = 9
+
+    init() {}
+
+    // 手写解码：新增字段用 decodeIfPresent，
+    // 这样老版本存下的 JSON 不会因为缺 key 直接解码失败。
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        showSundayRestCard = try c.decodeIfPresent(Bool.self, forKey: .showSundayRestCard) ?? true
+        examDateOverride = try c.decodeIfPresent(Date.self, forKey: .examDateOverride)
+        remindersEnabled = try c.decodeIfPresent(Bool.self, forKey: .remindersEnabled) ?? false
+        reminderHour = try c.decodeIfPresent(Int.self, forKey: .reminderHour) ?? 9
+    }
 }
 
 enum BudgetStatus {
@@ -666,3 +731,4 @@ enum BudgetStatus {
         }
     }
 }
+

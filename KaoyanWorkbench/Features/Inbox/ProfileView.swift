@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct ProfileView: View {
     @EnvironmentObject private var store: AppStore
@@ -13,6 +14,8 @@ struct ProfileView: View {
     @State private var showingClearConfirm = false
     @State private var showingExport = false
     @State private var exportedText = ""
+    @State private var permission: ReminderPermission = .unknown
+    @State private var pendingCount = 0
 
     var body: some View {
         NavigationStack {
@@ -20,6 +23,7 @@ struct ProfileView: View {
                 VStack(spacing: Theme.spacing) {
                     headerCard
                     moduleGrid
+                    reminderCard
                     todoCard
                     reflectionHistoryCard
                     dataCard
@@ -31,6 +35,9 @@ struct ProfileView: View {
             .background(Theme.background)
             .navigationTitle("我的")
             .navigationBarTitleDisplayMode(.large)
+            .task {
+                await refreshReminderState()
+            }
             .sheet(isPresented: $showingTodoEditor) {
                 TodoEditorView { todo in
                     store.addTodo(todo)
@@ -48,6 +55,11 @@ struct ProfileView: View {
                 ExportSheet(text: exportedText)
             }
         }
+    }
+
+    private func refreshReminderState() async {
+        permission = await store.reminderPermission()
+        pendingCount = await store.pendingReminderCount()
     }
 
     // MARK: - 头部
@@ -174,6 +186,105 @@ struct ProfileView: View {
         .padding(14)
         .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+    }
+
+    // MARK: - 提醒
+
+    private var reminderCard: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 12) {
+                reminderHeader
+                reminderToggle
+                if store.settings.remindersEnabled {
+                    reminderTimePicker
+                }
+                reminderFooter
+            }
+        }
+    }
+
+    private var reminderHeader: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "bell.badge.fill")
+                .foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("错题回炉提醒")
+                    .font(.headline)
+                Text("到第 7 天时通知你回炉，不用主动想起来")
+                    .font(.caption)
+                    .foregroundStyle(Theme.secondaryLabel)
+            }
+            Spacer()
+        }
+    }
+
+    private var reminderToggle: some View {
+        Toggle(
+            "开启提醒",
+            isOn: Binding(
+                get: { store.settings.remindersEnabled },
+                set: { store.setRemindersEnabled($0) }
+            )
+        )
+        .font(.subheadline)
+    }
+
+    private var reminderTimePicker: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("提醒时间")
+                    .font(.caption)
+                    .foregroundStyle(Theme.secondaryLabel)
+                Spacer()
+                Text(String(format: "%02d:00", store.settings.reminderHour))
+                    .font(.caption.monospacedDigit().weight(.medium))
+                    .foregroundStyle(Theme.secondaryLabel)
+            }
+            Slider(
+                value: Binding(
+                    get: { Double(store.settings.reminderHour) },
+                    set: { store.setReminderHour(Int($0.rounded())) }
+                ),
+                in: 6...22,
+                step: 1
+            )
+            .tint(.orange)
+
+            if permission == .denied {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                    Text("通知权限被拒绝了，去系统设置里打开")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.secondaryLabel)
+                    Spacer()
+                    Button("去设置") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                    .font(.caption2.weight(.semibold))
+                }
+            } else if permission == .authorized {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.caption2)
+                        .foregroundStyle(Color(red: 0.18, green: 0.68, blue: 0.42))
+                    Text("已排程 \(pendingCount) 条提醒")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.secondaryLabel)
+                    Spacer()
+                }
+            }
+        }
+    }
+
+    private var reminderFooter: some View {
+        Text("完成回炉①后，系统会在第 7 天按上面的时间提醒你。完成回炉②或删除错题，提醒自动取消。")
+            .font(.caption2)
+            .foregroundStyle(Theme.tertiaryLabel)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     // MARK: - 待办
