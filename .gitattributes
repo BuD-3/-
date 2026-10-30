@@ -1,0 +1,17 @@
+# 统一换行符：macOS 上的 Xcode / xcodebuild 对 CRLF 敏感，
+# 全部强制 LF，避免 Windows 提交进来后云端编译出现奇怪错误。
+* text=auto eol=lf
+
+*.pbxproj    text eol=lf
+*.swift      text eol=lf
+*.yml        text eol=lf
+*.yaml       text eol=lf
+*.json       text eol=lf
+*.md         text eol=lf
+*.xcscheme   text eol=lf
+
+# 二进制
+*.png  binary
+*.jpg  binary
+*.pdf  binary
+*.ipa  binary
