@@ -26,59 +26,13 @@ struct MaterialDetailView: View {
             if let material {
                 content(material)
             } else {
-                EmptyStateView(
-                    symbol: "trash",
-                    title: "这份资料已被删除",
-                    message: "返回上一页看看别的。"
-                )
-                .frame(maxHeight: .infinity)
-                .background(Theme.background)
+                missingView
             }
         }
         .navigationTitle(material?.title ?? "资料")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            if let material {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Button {
-                            showingEditor = true
-                        } label: {
-                            Label("编辑信息", systemImage: "pencil")
-                        }
-
-                        if let url = material.fileURL, FileManager.default.fileExists(atPath: url.path) {
-                            ShareLink(item: url) {
-                                Label("分享附件", systemImage: "square.and.arrow.up")
-                            }
-                        } else if material.hasBody {
-                            ShareLink(item: material.body) {
-                                Label("分享文字", systemImage: "square.and.arrow.up")
-                            }
-                        }
-
-                        Button(role: .destructive) {
-                            showingDeleteConfirm = true
-                        } label: {
-                            Label("删除", systemImage: "trash")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                    }
-                }
-            }
-        }
-        .sheet(isPresented: $showingEditor) {
-            if let material {
-                MaterialComposer(
-                    editing: material,
-                    presetDate: nil,
-                    presetItem: nil,
-                    onSave: { store.updateMaterial($0) },
-                    availableProgressItems: store.progressItems
-                )
-            }
-        }
+        .toolbar { toolbarContent }
+        .sheet(isPresented: $showingEditor) { editorSheet }
         .alert("删除这份资料？", isPresented: $showingDeleteConfirm) {
             Button("取消", role: .cancel) {}
             Button("删除", role: .destructive) {
@@ -89,6 +43,65 @@ struct MaterialDetailView: View {
             }
         } message: {
             Text("附件文件会一起删掉，无法恢复。")
+        }
+    }
+
+    private var missingView: some View {
+        EmptyStateView(
+            symbol: "trash",
+            title: "这份资料已被删除",
+            message: "返回上一页看看别的。"
+        )
+        .frame(maxHeight: .infinity)
+        .background(Theme.background)
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        if let material {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        showingEditor = true
+                    } label: {
+                        Label("编辑信息", systemImage: "pencil")
+                    }
+                    shareButton(material)
+                    Button(role: .destructive) {
+                        showingDeleteConfirm = true
+                    } label: {
+                        Label("删除", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func shareButton(_ material: StudyMaterial) -> some View {
+        if let url = material.fileURL, FileManager.default.fileExists(atPath: url.path) {
+            ShareLink(item: url) {
+                Label("分享附件", systemImage: "square.and.arrow.up")
+            }
+        } else if material.hasBody {
+            ShareLink(item: material.body) {
+                Label("分享文字", systemImage: "square.and.arrow.up")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var editorSheet: some View {
+        if let material {
+            MaterialComposer(
+                editing: material,
+                presetDate: nil,
+                presetItem: nil,
+                onSave: { store.updateMaterial($0) },
+                availableProgressItems: store.progressItems
+            )
         }
     }
 

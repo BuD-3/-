@@ -22,57 +22,73 @@ struct ProgressMaterialsSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: Theme.spacing) {
-                    headerCard
+            content
+                .background(Theme.background)
+                .navigationTitle("章节资料")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { toolbarContent }
+                .sheet(isPresented: $showingComposer) { composer }
+        }
+    }
 
-                    if materials.isEmpty {
-                        Card {
-                            EmptyStateView(
-                                symbol: "paperclip",
-                                title: "这个章节还没有资料",
-                                message: "把课本截图、真题 PDF、或者自己整理的文字笔记传进来，以后翻这一章就能直接看到。"
-                            )
-                        }
-                    } else {
-                        ForEach(materials) { material in
-                            NavigationLink {
-                                MaterialDetailView(materialID: material.id)
-                            } label: {
-                                row(material)
-                            }
-                            .buttonStyle(.plain)
-                        }
+    private var content: some View {
+        ScrollView {
+            VStack(spacing: Theme.spacing) {
+                headerCard
+                listSection
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+    }
+
+    private var listSection: some View {
+        Group {
+            if materials.isEmpty {
+                emptyCard
+            } else {
+                ForEach(materials) { material in
+                    NavigationLink(destination: MaterialDetailView(materialID: material.id)) {
+                        row(material)
                     }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-            }
-            .background(Theme.background)
-            .navigationTitle("章节资料")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showingComposer = true
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                    }
-                    .accessibilityLabel("添加资料")
+                    .buttonStyle(.plain)
                 }
             }
-            .sheet(isPresented: $showingComposer) {
-                MaterialComposer(
-                    editing: nil,
-                    presetDate: nil,
-                    presetItem: item,
-                    onSave: { store.addMaterial($0) },
-                    availableProgressItems: store.progressItems
-                )
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button("关闭") { dismiss() }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                showingComposer = true
+            } label: {
+                Image(systemName: "plus.circle.fill")
             }
+            .accessibilityLabel("添加资料")
+        }
+    }
+
+    private var composer: some View {
+        MaterialComposer(
+            editing: nil,
+            presetDate: nil,
+            presetItem: item,
+            onSave: { store.addMaterial($0) },
+            availableProgressItems: store.progressItems
+        )
+    }
+
+    private var emptyCard: some View {
+        Card {
+            EmptyStateView(
+                symbol: "paperclip",
+                title: "这个章节还没有资料",
+                message: "把课本截图、真题 PDF、或者自己整理的文字笔记传进来，以后翻这一章就能直接看到。"
+            )
         }
     }
 

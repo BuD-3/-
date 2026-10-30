@@ -412,59 +412,73 @@ struct TodayView: View {
     private var materialCard: some View {
         Card {
             VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("今天学过什么")
-                            .font(.headline)
-                        Text("拍张笔记、传个 PDF，或者写几句小结")
-                            .font(.caption)
-                            .foregroundStyle(Theme.secondaryLabel)
-                    }
-                    Spacer()
-                    Button {
-                        showingComposer = true
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title3)
-                    }
-                    .accessibilityLabel("上传今天的学习内容")
-                }
+                materialHeader
+                materialBody
+            }
+        }
+    }
 
-                if todayMaterials.isEmpty {
-                    Button {
-                        showingComposer = true
-                    } label: {
-                        HStack(spacing: 10) {
-                            Image(systemName: "tray.and.arrow.down")
-                                .font(.title3)
-                                .foregroundStyle(Theme.accent)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("还没有记录")
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(Theme.label)
-                                Text("点这里上传今天学的资料")
-                                    .font(.caption2)
-                                    .foregroundStyle(Theme.tertiaryLabel)
-                            }
-                            Spacer()
-                        }
-                        .padding(12)
-                        .background(Theme.tertiaryCard)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    VStack(spacing: 8) {
-                        ForEach(todayMaterials) { material in
-                            NavigationLink {
-                                MaterialDetailView(materialID: material.id)
-                            } label: {
-                                materialRow(material)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
+    private var materialHeader: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("今天学过什么")
+                    .font(.headline)
+                Text("拍张笔记、传个 PDF，或者写几句小结")
+                    .font(.caption)
+                    .foregroundStyle(Theme.secondaryLabel)
+            }
+            Spacer()
+            Button {
+                showingComposer = true
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title3)
+            }
+            .accessibilityLabel("上传今天的学习内容")
+        }
+    }
+
+    @ViewBuilder
+    private var materialBody: some View {
+        if todayMaterials.isEmpty {
+            emptyMaterialPrompt
+        } else {
+            materialList
+        }
+    }
+
+    private var emptyMaterialPrompt: some View {
+        Button {
+            showingComposer = true
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "tray.and.arrow.down")
+                    .font(.title3)
+                    .foregroundStyle(Theme.accent)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("还没有记录")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Theme.label)
+                    Text("点这里上传今天学的资料")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.tertiaryLabel)
                 }
+                Spacer()
+            }
+            .padding(12)
+            .background(Theme.tertiaryCard)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var materialList: some View {
+        VStack(spacing: 8) {
+            ForEach(todayMaterials) { material in
+                NavigationLink(destination: MaterialDetailView(materialID: material.id)) {
+                    materialRow(material)
+                }
+                .buttonStyle(.plain)
             }
         }
     }
