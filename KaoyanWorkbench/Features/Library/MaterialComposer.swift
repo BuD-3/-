@@ -1,4 +1,4 @@
-//
+﻿//
 //  MaterialComposer.swift
 //  KaoyanWorkbench
 //
@@ -25,7 +25,7 @@ struct MaterialComposer: View {
 
     @State private var title: String = ""
     @State private var note: String = ""
-    @State private var body: String = ""
+    @State private var textBody: String = ""
     @State private var subject: Subject?
     @State private var progressItemID: UUID?
     @State private var linkToDate: Bool = true
@@ -46,7 +46,7 @@ struct MaterialComposer: View {
 
     private var canSave: Bool {
         let hasTitle = !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        return hasTitle || fileName != nil || !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return hasTitle || fileName != nil || !textBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var kind: StudyMaterialKind {
@@ -158,10 +158,10 @@ struct MaterialComposer: View {
             TextField("标题（如 同济第1章 极限笔记）", text: $title)
 
             if fileName == nil {
-                TextEditor(text: $body)
+                TextEditor(text: $textBody)
                     .frame(minHeight: 120)
                     .overlay(alignment: .topLeading) {
-                        if body.isEmpty {
+                        if textBody.isEmpty {
                             Text("也可以直接写文字笔记…")
                                 .font(.footnote)
                                 .foregroundStyle(Theme.tertiaryLabel)
@@ -222,7 +222,7 @@ struct MaterialComposer: View {
         if let editing {
             title = editing.title
             note = editing.note
-            body = editing.body
+            textBody = editing.body
             subject = editing.subject
             progressItemID = editing.progressItemID
             fileName = editing.fileName
@@ -304,7 +304,7 @@ struct MaterialComposer: View {
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let finalTitle: String = {
             if !trimmedTitle.isEmpty { return trimmedTitle }
-            if hasTextBody { return String(body.trimmingCharacters(in: .whitespacesAndNewlines).prefix(20)) }
+            if hasTextBody { return String(textBody.trimmingCharacters(in: .whitespacesAndNewlines).prefix(20)) }
             return "未命名资料"
         }()
 
@@ -313,7 +313,7 @@ struct MaterialComposer: View {
         material.kind = kind
         material.fileName = fileName
         material.fileSize = fileSize
-        material.body = body
+        material.body = textBody
         material.note = note.trimmingCharacters(in: .whitespacesAndNewlines)
         material.subject = subject
         material.progressItemID = progressItemID
@@ -324,6 +324,7 @@ struct MaterialComposer: View {
     }
 
     private var hasTextBody: Bool {
-        !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !textBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
+
