@@ -18,7 +18,6 @@ struct TodayView: View {
     private var record: DayCheckIn { store.checkIn(for: today) }
     private var studiedHours: Double { store.studyHours(on: today) }
     private var plannedHours: Double { store.plannedHours(on: today) }
-    private var fragmentTotal: Double { DailySchedule.fragmentHours(for: today) }
     private var ratio: Double { store.completionRatio(on: today) }
 
     var body: some View {
@@ -282,11 +281,6 @@ struct TodayView: View {
                         Text("已完成 \(ClockFormatter.hoursText(studiedHours)) / 计划 \(ClockFormatter.hoursText(plannedHours))")
                             .font(.caption)
                             .foregroundStyle(Theme.secondaryLabel)
-                        if fragmentTotal > 0 {
-                            Text("另含单词碎片 \(ClockFormatter.hoursText(fragmentTotal))，不计入基准")
-                                .font(.caption2)
-                                .foregroundStyle(Theme.tertiaryLabel)
-                        }
                     }
                     Spacer()
                     ZStack {

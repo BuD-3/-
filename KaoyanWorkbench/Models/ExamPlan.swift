@@ -125,25 +125,25 @@ enum ExamPlanData {
         MonthPlan(id: "2026-11", stage: .foundation,
                   math: "高数：函数、极限、连续（同济第 1 章 + 基础课）；每天 30 道纯计算",
                   cs408: "数据结构：绪论、线性表（王道第 1-2 章）",
-                  english: "单词 Unit1-4（每天 100 词，滚动复习）+ 长难句入门",
+                  english: "长难句入门 + 语法基础",
                   politics: "—",
                   milestone: "极限计算正确率 ≥80%；线性表课后题全部完成"),
         MonthPlan(id: "2026-12", stage: .foundation,
                   math: "高数：一元函数微分学（同济第 2 章）；导数/微分/中值定理初步",
                   cs408: "数据结构：栈、队列、串、数组（第 3-4 章）",
-                  english: "单词 Unit5-8 + 长难句每日 2 句",
+                  english: "长难句每日 2 句 + 语法专项",
                   politics: "—",
                   milestone: "求导运算准确率 ≥90%"),
         MonthPlan(id: "2027-01", stage: .foundation,
                   math: "高数：一元函数积分学（同济第 3 章）；不定/定积分、变限积分",
                   cs408: "数据结构：树与二叉树、图（第 5-6 章）",
-                  english: "单词 Unit9-12 + 外刊精读 2 篇/周",
+                  english: "外刊精读 2 篇/周 + 长难句强化",
                   politics: "—",
                   milestone: "地基自测①：高数基础卷 ≥90/150"),
         MonthPlan(id: "2027-02", stage: .foundation,
                   math: "高数：多元函数微积分、常微分方程（同济第 4-5 章）",
                   cs408: "数据结构：查找、排序（第 7-8 章）+ 王道数据结构二刷",
-                  english: "单词 Unit13-16 + 英语一真题阅读（2005-2010）精读",
+                  english: "英语一真题阅读（2005-2010）精读",
                   politics: "—",
                   milestone: "高数基础课全部完成；数据结构一轮完成"),
         MonthPlan(id: "2027-03", stage: .roundOne,
@@ -261,10 +261,6 @@ struct ScheduleBlock: Identifiable, Codable, Hashable {
     let title: String
     let detail: String
     let kind: ScheduleBlockKind
-    /// 是否计入「有效学习时长」基准（9.5 小时/天）。
-    /// 早上「起床·早餐·单词 100」与晚上「单词二刷」属于碎片时间，
-    /// 单独统计而不计入基准——这样每日计划时长才与表里 9.5 小时一致。
-    var countsTowardBaseline: Bool = true
 
     var durationMinutes: Int { max(0, endMinute - startMinute) }
     var durationHours: Double { Double(durationMinutes) / 60.0 }
@@ -275,11 +271,11 @@ struct ScheduleBlock: Identifiable, Codable, Hashable {
 
 enum DailySchedule {
     /// 周一至周六课表（03 每日课表）
+    /// 单词背诵未纳入课表——由使用者自行安排。
     static let weekdayBlocks: [ScheduleBlock] = [
         ScheduleBlock(id: "w-morning-wake", startMinute: 6 * 60 + 40, endMinute: 7 * 60 + 20,
-                      title: "起床 · 早餐 · 英语单词 100 个",
-                      detail: "单词放在早上，不占用大块时间", kind: .english,
-                      countsTowardBaseline: false),
+                      title: "起床 · 早餐",
+                      detail: "别跳过早饭，上午三小时数学要靠它", kind: .rest),
         ScheduleBlock(id: "w-reading", startMinute: 7 * 60 + 20, endMinute: 8 * 60 + 50,
                       title: "英语：长难句 / 阅读精读",
                       detail: "1.5 小时，脑子最清醒之一", kind: .english),
@@ -298,11 +294,7 @@ enum DailySchedule {
         ScheduleBlock(id: "w-review", startMinute: 19 * 60, endMinute: 20 * 60 + 30,
                       title: "当天错题复盘（数学 + 408）",
                       detail: "当天错题当天清，不过夜", kind: .review),
-        ScheduleBlock(id: "w-words2", startMinute: 20 * 60 + 30, endMinute: 21 * 60 + 30,
-                      title: "英语单词二刷 + 明日计划",
-                      detail: "10 分钟写当日复盘，3 行即可", kind: .english,
-                      countsTowardBaseline: false),
-        ScheduleBlock(id: "w-flex", startMinute: 21 * 60 + 30, endMinute: 22 * 60 + 30,
+        ScheduleBlock(id: "w-flex", startMinute: 20 * 60 + 30, endMinute: 22 * 60 + 30,
                       title: "弹性时间（补进度 / 放松）",
                       detail: "不安排硬任务，防止透支", kind: .flexible)
     ]
@@ -325,17 +317,9 @@ enum DailySchedule {
     }
 
     /// 有效学习时长（小时/天），对齐表里「约 9.5 小时/天」的基准。
-    /// 只统计核心区块，不含单词碎片。
     static func studyHours(for date: Date) -> Double {
         blocks(for: date)
-            .filter { $0.kind.countsAsStudy && $0.countsTowardBaseline }
-            .reduce(0) { $0 + $1.durationHours }
-    }
-
-    /// 碎片时间（单词等），不计入基准但可勾选
-    static func fragmentHours(for date: Date) -> Double {
-        blocks(for: date)
-            .filter { $0.kind.countsAsStudy && !$0.countsTowardBaseline }
+            .filter { $0.kind.countsAsStudy }
             .reduce(0) { $0 + $1.durationHours }
     }
 }

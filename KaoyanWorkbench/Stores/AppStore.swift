@@ -147,22 +147,14 @@ final class AppStore: ObservableObject {
         checkIns[DateKey.key(for: date)]?.completedBlockIDs ?? []
     }
 
-    /// 某天的有效学习小时数（勾选的核心课表块 + 补记）
+    /// 某天的有效学习小时数（勾选的课表块 + 补记）
     func studyHours(on date: Date) -> Double {
         let record = checkIns[DateKey.key(for: date)] ?? DayCheckIn.empty(dateKey: DateKey.key(for: date))
         let blocks = DailySchedule.blocks(for: date)
         let fromBlocks = blocks
-            .filter { $0.kind.countsAsStudy && $0.countsTowardBaseline && record.completedBlockIDs.contains($0.id) }
+            .filter { $0.kind.countsAsStudy && record.completedBlockIDs.contains($0.id) }
             .reduce(0.0) { $0 + $1.durationHours }
         return fromBlocks + Double(record.extraStudyMinutes) / 60.0
-    }
-
-    /// 某天已完成的碎片时长（单词等，不计入基准）
-    func fragmentHours(on date: Date) -> Double {
-        let record = checkIns[DateKey.key(for: date)] ?? DayCheckIn.empty(dateKey: DateKey.key(for: date))
-        return DailySchedule.blocks(for: date)
-            .filter { $0.kind.countsAsStudy && !$0.countsTowardBaseline && record.completedBlockIDs.contains($0.id) }
-            .reduce(0.0) { $0 + $1.durationHours }
     }
 
     func plannedHours(on date: Date) -> Double {
@@ -223,7 +215,7 @@ final class AppStore: ObservableObject {
             guard let date = DateKey.date(from: record.dateKey) else { return sum }
             let blocks = DailySchedule.blocks(for: date)
             let hours = blocks
-                .filter { $0.kind.countsAsStudy && $0.countsTowardBaseline && record.completedBlockIDs.contains($0.id) }
+                .filter { $0.kind.countsAsStudy && record.completedBlockIDs.contains($0.id) }
                 .reduce(0.0) { $0 + $1.durationHours }
             return sum + hours + Double(record.extraStudyMinutes) / 60.0
         }
