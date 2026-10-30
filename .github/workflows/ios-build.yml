@@ -1,7 +1,7 @@
 name: iOS Build
 
-# 云端 Mac 编译：把编译器看得见的错误一次性摊开，
-# 不需要本地有 Mac 就能验证工程能否编译。
+# 云端 Mac 编译 + 真机模拟器截图。
+# 不需要本地有 Mac 就能验证工程能否编译、界面长什么样。
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -63,8 +63,8 @@ jobs:
         if: steps.build.outcome == 'failure'
         run: |
           echo "================= COMPILE ERRORS ================="
-          grep -n -E "error:|fatal error:" build.log | head -n 100 || echo "（没有匹配到 error: 行，请看完整日志）"
-          echo "================= 首个 error 的上下文 ================="
+          grep -n -E "error:|fatal error:" build.log | head -n 100 || echo "(no error: lines matched)"
+          echo "================= context ================="
           FIRST=$(grep -n -E "error:" build.log | head -n 1 | cut -d: -f1)
           if [ -n "$FIRST" ]; then
             START=$(( FIRST > 3 ? FIRST - 3 : 1 ))
@@ -87,4 +87,91 @@ jobs:
           exit 1
 
       - name: 成功
-        run: echo "::notice::编译通过 ✅"
+        run: echo "::notice::编译通过"
+
+  screenshots:
+    name: Simulator Screenshots
+    runs-on: macos-15
+    needs: build
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 编译到 .app
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project KaoyanWorkbench.xcodeproj \
+            -scheme KaoyanWorkbench \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            2>&1 | tail -n 20
+
+      - name: 定位 .app
+        id: app
+        run: |
+          APP=$(find build/Build/Products -maxdepth 2 -name "KaoyanWorkbench.app" -type d | head -n 1)
+          echo "找到: $APP"
+          test -d "$APP" || { echo "::error::没找到 .app"; exit 1; }
+          echo "path=$APP" >> "$GITHUB_OUTPUT"
+
+      - name: 选择并启动模拟器
+        id: sim
+        run: |
+          # 优先 iPhone 16，找不到就用任意可用 iPhone
+          DEVICE="iPhone 16"
+          if ! xcrun simctl list devices available | grep -q "$DEVICE ("; then
+            DEVICE=$(xcrun simctl list devices available | grep -oE "iPhone [0-9][0-9A-Za-z]*" | head -n 1)
+          fi
+          echo "设备: $DEVICE"
+          xcrun simctl boot "$DEVICE" || true
+          xcrun simctl bootstatus "$DEVICE" -b
+          xcrun simctl ui "$DEVICE" appearance light || true
+          xcrun simctl status_bar "$DEVICE" override \
+            --time "9:41" \
+            --batteryState charged \
+            --batteryLevel 100 \
+            --cellularMode active \
+            --cellularBars 4 \
+            --wifiMode active \
+            --wifiBars 3 || true
+          echo "device=$DEVICE" >> "$GITHUB_OUTPUT"
+
+      - name: 安装
+        run: |
+          xcrun simctl install "${{ steps.sim.outputs.device }}" "${{ steps.app.outputs.path }}"
+
+      - name: 逐页截图
+        run: |
+          DEVICE="${{ steps.sim.outputs.device }}"
+          BUNDLE="com.kaoyan.workbench"
+          mkdir -p screenshots
+          # 0=今日 1=计划 2=错题 3=进度 4=我的
+          NAMES=("01-today" "02-plan" "03-review" "04-progress" "05-profile")
+          for i in 0 1 2 3 4; do
+            NAME="${NAMES[$i]}"
+            echo "--- 截取 $NAME (tab=$i) ---"
+            xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
+            sleep 1
+            xcrun simctl launch "$DEVICE" "$BUNDLE" --tab "$i"
+            sleep 6
+            xcrun simctl io "$DEVICE" screenshot "screenshots/$NAME.png"
+            ls -la "screenshots/$NAME.png"
+          done
+          echo "=== 全部截图 ==="
+          ls -la screenshots/
+
+      - name: 上传截图
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/
+          if-no-files-found: warn

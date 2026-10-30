@@ -23,7 +23,21 @@ struct KaoyanWorkbenchApp: App {
 
 struct RootView: View {
     @EnvironmentObject private var store: AppStore
-    @State private var selection: Int = 0
+    @State private var selection: Int = RootView.initialTab
+
+    /// 允许用启动参数指定初始页签，供自动化截图使用：
+    ///   xcrun simctl launch booted com.kaoyan.workbench --tab 2
+    /// 只认 0...4，其余情况回落到首页。
+    static var initialTab: Int {
+        let args = ProcessInfo.processInfo.arguments
+        guard let idx = args.firstIndex(of: "--tab"),
+              idx + 1 < args.count,
+              let value = Int(args[idx + 1]),
+              (0...4).contains(value) else {
+            return 0
+        }
+        return value
+    }
 
     var body: some View {
         TabView(selection: $selection) {
