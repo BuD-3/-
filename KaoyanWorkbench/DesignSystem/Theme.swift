@@ -176,26 +176,29 @@ struct StatTile: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 if let symbol {
                     Image(systemName: symbol)
-                        .font(.footnote)
+                        .font(.system(size: 12))
                         .foregroundStyle(tint)
                 }
                 Text(title)
-                    .font(.footnote)
+                    .font(.system(size: 12))
                     .foregroundStyle(Theme.secondaryLabel)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
             Text(value)
-                .font(.system(size: 22, weight: .semibold, design: .rounded))
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
                 .foregroundStyle(Theme.label)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
             if let caption {
                 Text(caption)
-                    .font(.footnote)
+                    .font(.system(size: 11))
                     .foregroundStyle(Theme.tertiaryLabel)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -231,7 +231,7 @@ struct ProfileView: View {
                 HStack(spacing: 8) {
                     StatTile(title: "累计专注",
                              value: ClockFormatter.hoursText(store.totalStudyHours),
-                             caption: "自 2026-11-01",
+                             caption: "11-01 起",
                              tint: Theme.accent,
                              symbol: "clock.fill")
                     StatTile(title: "连续打卡",
@@ -239,9 +239,9 @@ struct ProfileView: View {
                              caption: "别断",
                              tint: .orange,
                              symbol: "flame.fill")
-                    StatTile(title: "错题未掌握",
+                    StatTile(title: "未掌握",
                              value: "\(store.unmasteredMistakes.count) 题",
-                             caption: "含待回炉",
+                             caption: "错题",
                              tint: .red,
                              symbol: "book.closed.fill")
                 }

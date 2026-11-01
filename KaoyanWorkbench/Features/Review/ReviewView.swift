@@ -91,11 +91,11 @@ struct ReviewView: View {
                 }
 
                 HStack(spacing: 8) {
-                    StatTile(title: "等待回炉①",
+                    StatTile(title: "待回炉①",
                              value: "\(store.mistakes.filter { $0.status == .fresh }.count)",
                              tint: .orange,
                              symbol: "clock.arrow.circlepath")
-                    StatTile(title: "等待回炉②",
+                    StatTile(title: "待回炉②",
                              value: "\(store.mistakes.filter { $0.status == .pendingDay }.count)",
                              tint: .red,
                              symbol: "calendar.badge.clock")
