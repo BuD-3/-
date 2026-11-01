@@ -12,7 +12,8 @@ struct TodayView: View {
     @State private var showingReflection = false
     @State private var reflectionDraft = ""
     @State private var showingComposer = false
-    @State private var stageCardFlipped = false
+    /// 自动化截图用：xcrun simctl launch ... --flip-stage 时直接显示背面
+    @State private var stageCardFlipped = ProcessInfo.processInfo.arguments.contains("--flip-stage")
 
     private var today: Date { Date() }
     private var blocks: [ScheduleBlock] { DailySchedule.blocks(for: today) }

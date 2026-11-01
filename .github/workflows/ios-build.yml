@@ -203,6 +203,13 @@ jobs:
           sleep 6
           xcrun simctl io "$DEVICE" screenshot "screenshots/09-report.png"
 
+          echo "--- 截取 10-stage-back (阶段卡背面) ---"
+          xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
+          sleep 1
+          xcrun simctl launch "$DEVICE" "$BUNDLE" --tab 0 --seed-demo --flip-stage
+          sleep 6
+          xcrun simctl io "$DEVICE" screenshot "screenshots/10-stage-back.png"
+
           echo "--- 截取 08-home (桌面图标) ---"
           xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
           sleep 4
