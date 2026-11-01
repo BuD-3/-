@@ -12,6 +12,7 @@ struct TodayView: View {
     @State private var showingReflection = false
     @State private var reflectionDraft = ""
     @State private var showingComposer = false
+    @State private var stageCardFlipped = false
 
     private var today: Date { Date() }
     private var blocks: [ScheduleBlock] { DailySchedule.blocks(for: today) }
@@ -210,17 +211,59 @@ struct TodayView: View {
     private var stageCard: some View {
         let month = ExamPlanData.currentMonth(on: today)
         let stage = month?.stage ?? .foundation
-        return Card {
+        return FlipCard(isFlipped: $stageCardFlipped) {
+            stageCardFront(stage: stage, month: month)
+        } back: {
+            stageCardBack(stage: stage, month: month)
+        }
+    }
+
+    /// 正面：只有阶段、月份、科目徽章 —— 一眼看完
+    private func stageCardFront(stage: PlanStage, month: MonthPlan?) -> some View {
+        Card {
             VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    HStack(spacing: 7) {
-                        Circle()
-                            .fill(Theme.color(for: stage))
-                            .frame(width: 8, height: 8)
-                        Text(stage.rawValue)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Theme.color(for: stage))
+                HStack(spacing: 7) {
+                    Circle()
+                        .fill(Theme.color(for: stage))
+                        .frame(width: 8, height: 8)
+                    Text(stage.rawValue)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.color(for: stage))
+                    Spacer()
+                    Text(month?.title ?? "—")
+                        .font(.caption)
+                        .foregroundStyle(Theme.tertiaryLabel)
+                    Image(systemName: "rotate.3d")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.tertiaryLabel)
+                }
+
+                HStack(spacing: 6) {
+                    if let month {
+                        SubjectBadge(subject: .math, compact: true)
+                        SubjectBadge(subject: .cs408, compact: true)
+                        SubjectBadge(subject: .english, compact: true)
+                        if month.politics != "—" {
+                            SubjectBadge(subject: .politics, compact: true)
+                        }
                     }
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+    }
+
+    /// 背面：本月具体内容 + 里程碑
+    private func stageCardBack(stage: PlanStage, month: MonthPlan?) -> some View {
+        Card {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 7) {
+                    Circle()
+                        .fill(Theme.color(for: stage))
+                        .frame(width: 8, height: 8)
+                    Text(stage.rawValue)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.color(for: stage))
                     Spacer()
                     Text(month?.title ?? "—")
                         .font(.caption)

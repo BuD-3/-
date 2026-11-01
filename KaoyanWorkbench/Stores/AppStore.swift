@@ -368,15 +368,17 @@ final class AppStore: ObservableObject {
         weekStudyHours().filter { !$0.isFuture }.reduce(0) { $0 + $1.planned }
     }
 
-    /// 连续打卡天数：从今天（或昨天）往回数，当天有效学习 > 0 才算
+    /// 连续打卡天数：从今天（或昨天）往回数，当天有效学习 > 0 才算。
+    /// 到备考启动日就停 —— 启动日之前不算「坚持」。
     var streakDays: Int {
+        let start = CalendarHelper.startOfDay(PlanTimeline.startDate)
         var count = 0
         var cursor = todayDate
         if studyHours(on: cursor) <= 0 {
             cursor = CalendarHelper.adding(days: -1, to: cursor)
         }
         var guardCount = 0
-        while studyHours(on: cursor) > 0 && guardCount < 2000 {
+        while cursor >= start, studyHours(on: cursor) > 0, guardCount < 2000 {
             count += 1
             cursor = CalendarHelper.adding(days: -1, to: cursor)
             guardCount += 1
@@ -386,8 +388,11 @@ final class AppStore: ObservableObject {
 
     /// 累计学习小时数（自备考启动以来，对齐 9.5 小时/天 基准）
     var totalStudyHours: Double {
-        checkIns.values.reduce(0) { sum, record in
+        let planStart = CalendarHelper.startOfDay(PlanTimeline.startDate)
+        return checkIns.values.reduce(0) { sum, record in
             guard let date = DateKey.date(from: record.dateKey) else { return sum }
+            // 只累计备考启动日之后的学习，与「自 2026-11-01」的标签口径一致
+            guard CalendarHelper.startOfDay(date) >= planStart else { return sum }
             let blocks = DailySchedule.blocks(for: date)
             let hours = blocks
                 .filter { $0.kind.countsAsStudy && record.completedBlockIDs.contains($0.id) }
