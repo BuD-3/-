@@ -29,6 +29,7 @@ struct TodayView: View {
                 ScrollView {
                     VStack(spacing: Theme.spacing) {
                         countdownCard
+                        actionCards(proxy: proxy)
                         stageCard
 
                         if isLaunchDay {
@@ -38,6 +39,7 @@ struct TodayView: View {
                         }
 
                         timetableCard
+                            .id("timetable")
                         materialCard
                             .id("materials")
                         if !record.reflection.isEmpty {
@@ -140,26 +142,7 @@ struct TodayView: View {
                 }
             }
 
-            HStack(spacing: 12) {
-                countdownChip(
-                    title: "备考进度",
-                    value: hasStarted ? "第 \(dayNumber) 天" : "未启动",
-                    symbol: "flame.fill",
-                    tint: .orange
-                )
-                countdownChip(
-                    title: "连续打卡",
-                    value: "\(store.streakDays) 天",
-                    symbol: "checkmark.seal.fill",
-                    tint: Color(red: 0.18, green: 0.68, blue: 0.42)
-                )
-                countdownChip(
-                    title: "累计专注",
-                    value: ClockFormatter.hoursText(store.totalStudyHours),
-                    symbol: "clock.fill",
-                    tint: Theme.color(for: Subject.math)
-                )
-            }
+            statLine
 
             if let next = MilestoneData.next(after: today) {
                 HStack(spacing: 8) {
@@ -188,23 +171,71 @@ struct TodayView: View {
         )
     }
 
-    private func countdownChip(title: String, value: String, symbol: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Image(systemName: symbol)
-                .font(.footnote)
-                .foregroundStyle(tint)
-            Text(value)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            Text(title)
-                .font(.footnote)
-                .foregroundStyle(Theme.tertiaryLabel)
+    /// 三张统计小卡压成一行文字 —— 信息不丢，垂直空间省下来给行动卡
+    private var statLine: some View {
+        HStack(spacing: 6) {
+            statPiece("第 \(hasStarted ? "\(dayNumber)" : "–") 天", tint: .orange)
+            Text("·").foregroundStyle(Theme.tertiaryLabel)
+            statPiece("连续 \(store.streakDays) 天", tint: Color(red: 0.18, green: 0.68, blue: 0.42))
+            Text("·").foregroundStyle(Theme.tertiaryLabel)
+            statPiece("累计 \(ClockFormatter.hoursText(store.totalStudyHours))", tint: Theme.color(for: Subject.math))
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(Theme.tertiaryCard)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .font(.footnote)
+    }
+
+    private func statPiece(_ text: String, tint: Color) -> some View {
+        Text(text)
+            .font(.footnote)
+            .foregroundStyle(Theme.secondaryLabel)
+            .lineLimit(1)
+    }
+
+    // MARK: - 行动卡
+
+    /// 首页顶部只留两张「下一步做什么」的卡
+    private func actionCards(proxy: ScrollViewProxy) -> some View {
+        HStack(spacing: 8) {
+            ActionCard(
+                title: "今日课表",
+                value: "\(completedBlockCount)/\(blocks.count) 段",
+                hint: nextBlockHint,
+                tint: Theme.accent,
+                symbol: "list.bullet",
+                isDone: completedBlockCount >= blocks.count
+            ) {
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    proxy.scrollTo("timetable", anchor: .top)
+                }
+            }
+
+            ActionCard(
+                title: "错题回炉",
+                value: "\(reviewDueCount) 题",
+                hint: reviewDueCount > 0 ? "去回炉" : "队列已清空",
+                tint: reviewDueCount > 0 ? .red : Color(red: 0.18, green: 0.68, blue: 0.42),
+                symbol: "arrow.triangle.2.circlepath",
+                isDone: reviewDueCount == 0
+            ) {
+                store.activeTab = 2
+            }
+        }
+    }
+
+    private var completedBlockCount: Int {
+        blocks.filter { completed.contains($0.id) }.count
+    }
+
+    /// 下一个还没打勾的区块提示
+    private var nextBlockHint: String {
+        guard let next = blocks.first(where: { !completed.contains($0.id) }) else {
+            return "今天全部完成"
+        }
+        return "下一项 \(ClockFormatter.hhmm(next.startMinute))"
+    }
+
+    private var reviewDueCount: Int {
+        store.reviewQueue().count
     }
 
     // MARK: - 当前阶段

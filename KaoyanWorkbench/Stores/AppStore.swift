@@ -33,6 +33,19 @@ final class AppStore: ObservableObject {
     @Published private(set) var materials: [StudyMaterial] = []
     @Published var settings: AppSettings = AppSettings()
 
+    /// 当前页签（行动卡可以跳转到别的页）
+    @Published var activeTab: Int = AppStore.launchTab
+
+    /// 截图用：--tab N 指定启动页签
+    static var launchTab: Int {
+        let args = ProcessInfo.processInfo.arguments
+        guard let idx = args.firstIndex(of: "--tab"),
+              idx + 1 < args.count,
+              let value = Int(args[idx + 1]),
+              (0...4).contains(value) else { return 0 }
+        return value
+    }
+
     private var cancellables = Set<AnyCancellable>()
     private var isLoaded = false
 

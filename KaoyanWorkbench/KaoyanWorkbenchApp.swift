@@ -23,7 +23,6 @@ struct KaoyanWorkbenchApp: App {
 
 struct RootView: View {
     @EnvironmentObject private var store: AppStore
-    @State private var selection: Int = RootView.initialTab
 
     /// 允许用启动参数指定初始页签，供自动化截图使用：
     ///   xcrun simctl launch booted com.kaoyan.workbench --tab 2
@@ -60,7 +59,7 @@ struct RootView: View {
                     WeeklyReportView()
                 }
             } else {
-                TabView(selection: $selection) {
+                TabView(selection: $store.activeTab) {
                     TodayView()
                         .tabItem { Label("今日", systemImage: "sun.max.fill") }
                         .tag(0)
