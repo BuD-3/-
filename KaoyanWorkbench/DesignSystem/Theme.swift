@@ -62,6 +62,16 @@ enum Theme {
         }
     }
 
+    static func color(for slice: StudySlice) -> Color {
+        switch slice {
+        case .math: return color(for: Subject.math)
+        case .cs408: return color(for: Subject.cs408)
+        case .english: return color(for: Subject.english)
+        case .review: return Color(red: 0.85, green: 0.55, blue: 0.12)
+        case .extra: return Color(red: 0.45, green: 0.52, blue: 0.62)
+        }
+    }
+
     static let spacing: CGFloat = 16
     static let cardRadius: CGFloat = 18
 }

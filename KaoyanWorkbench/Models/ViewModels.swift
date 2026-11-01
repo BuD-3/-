@@ -16,6 +16,10 @@ struct WeekDayStudy: Identifiable, Hashable {
     let planned: Double
     let isFuture: Bool
 
+    var isToday: Bool {
+        CalendarHelper.isSameDay(date, Date())
+    }
+
     var weekdayLabel: String {
         CalendarHelper.isSameDay(date, Date())
             ? "今"

@@ -46,10 +46,16 @@ final class AppStore: ObservableObject {
         refreshReminders()
     }
 
-    /// 仅用于 CI 自动化截图：启动参数 --seed-demo 时塞几条示例资料。
+    /// 仅用于 CI 自动化截图：启动参数 --seed-demo 时塞几条示例资料 + 本周打卡。
     /// 正常使用不会触发。
     private func seedScreenshotDemoIfRequested() {
         guard ProcessInfo.processInfo.arguments.contains("--seed-demo") else { return }
+
+        seedDemoMaterials()
+        seedDemoCheckIns()
+    }
+
+    private func seedDemoMaterials() {
         guard materials.isEmpty else { return }
 
         let todayKey = DateKey.key(for: Date())
@@ -85,6 +91,43 @@ final class AppStore: ObservableObject {
                 dateKey: todayKey
             )
         ]
+    }
+
+    /// 造出「本周前几天有学习、最近一天没做完」的合理数据，让周报看起来像真的
+    private func seedDemoCheckIns() {
+        let today = CalendarHelper.startOfDay(Date())
+        let weekStart = CalendarHelper.startOfWeek(today)
+
+        for offset in -5...0 {
+            let day = CalendarHelper.adding(days: offset, to: today)
+            guard day >= weekStart else { continue }
+            guard checkIns[DateKey.key(for: day)] == nil else { continue }
+
+            let blocks = DailySchedule.blocks(for: day)
+            var done = Set<String>()
+            for (index, block) in blocks.enumerated() where block.kind.countsAsStudy {
+                // 越近的日子完成度越低，模拟真实的一周
+                let keepAll = offset <= -3
+                if keepAll || index % 2 == 0 {
+                    done.insert(block.id)
+                }
+            }
+
+            var record = DayCheckIn.empty(dateKey: DateKey.key(for: day))
+            record.completedBlockIDs = done
+            switch offset {
+            case -3:
+                record.extraStudyMinutes = 45
+                record.reflection = "极限 1^∞ 型练了 30 道，正确率上来了。"
+            case -2:
+                record.extraStudyMinutes = 30
+            case -1:
+                record.reflection = "408 栈和队列课后题做完了，图的遍历还卡着。"
+            default:
+                break
+            }
+            checkIns[record.dateKey] = record
+        }
     }
 
     private func load() {
@@ -221,8 +264,8 @@ final class AppStore: ObservableObject {
     var todayDate: Date { CalendarHelper.startOfDay(Date()) }
 
     /// 本周每日学习时长（周一 → 周日）
-    func weekStudyHours() -> [WeekDayStudy] {
-        let monday = CalendarHelper.startOfWeek(Date())
+    func weekStudyHours(containing date: Date = Date()) -> [WeekDayStudy] {
+        let monday = CalendarHelper.startOfWeek(date)
         let today = todayDate
         return (0..<7).map { offset in
             let day = CalendarHelper.adding(days: offset, to: monday)
@@ -233,6 +276,88 @@ final class AppStore: ObservableObject {
                 isFuture: CalendarHelper.startOfDay(day) > today
             )
         }
+    }
+
+    /// 某天的时间花在哪些块上
+    func sliceHours(on date: Date) -> [StudySlice: Double] {
+        let record = checkIns[DateKey.key(for: date)] ?? DayCheckIn.empty(dateKey: DateKey.key(for: date))
+        var result: [StudySlice: Double] = [:]
+        for block in DailySchedule.blocks(for: date) {
+            guard block.kind.countsAsStudy, record.completedBlockIDs.contains(block.id) else { continue }
+            let slice: StudySlice
+            switch block.kind {
+            case .review: slice = .review
+            case .math: slice = .math
+            case .cs408: slice = .cs408
+            case .english: slice = .english
+            default: continue
+            }
+            result[slice, default: 0] += block.durationHours
+        }
+        if record.extraStudyMinutes > 0 {
+            result[.extra, default: 0] += Double(record.extraStudyMinutes) / 60.0
+        }
+        return result
+    }
+
+    /// 生成某一周（默认本周）的完整周报
+    func weekReport(containing date: Date = Date()) -> WeekReport {
+        let monday = CalendarHelper.startOfWeek(date)
+        let days = weekStudyHours(containing: date)
+
+        let elapsed = days.filter { !$0.isFuture }.count
+        let total = days.reduce(0) { $0 + $1.hours }
+        let planned = days.filter { !$0.isFuture }.reduce(0) { $0 + $1.planned }
+
+        // 上周同期：只比「已经过完的天数」
+        let lastMonday = CalendarHelper.adding(days: -7, to: monday)
+        let lastDays = weekStudyHours(containing: lastMonday)
+        let lastTotal = lastDays.prefix(max(0, elapsed)).reduce(0.0) { $0 + $1.hours }
+
+        // 分块汇总
+        var sliceTotals: [StudySlice: Double] = [:]
+        for day in days {
+            for (slice, hours) in sliceHours(on: day.date) {
+                sliceTotals[slice, default: 0] += hours
+            }
+        }
+        let slices = StudySlice.allCases
+            .compactMap { slice -> SliceTotal? in
+                let hours = sliceTotals[slice] ?? 0
+                return hours > 0 ? SliceTotal(slice: slice, hours: hours) : nil
+            }
+            .sorted { $0.hours > $1.hours }
+
+        let achieved = days.filter { !$0.isFuture && $0.planned > 0 && $0.hours >= $0.planned * 0.9 }.count
+
+        var extraMinutes = 0
+        var reflectionDays = 0
+        for day in days {
+            if let record = checkIns[DateKey.key(for: day.date)] {
+                extraMinutes += record.extraStudyMinutes
+                if !record.reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    reflectionDays += 1
+                }
+            }
+        }
+
+        return WeekReport(
+            weekStart: monday,
+            days: days,
+            elapsedDays: elapsed,
+            totalHours: total,
+            plannedHours: planned,
+            lastWeekHours: lastTotal,
+            slices: slices,
+            achievedDays: achieved,
+            extraMinutes: extraMinutes,
+            reflectionDays: reflectionDays
+        )
+    }
+
+    /// 这一周是否就是当前周（决定「下一周」按钮是否可用）
+    func isCurrentWeek(_ weekStart: Date) -> Bool {
+        CalendarHelper.isSameDay(CalendarHelper.startOfWeek(Date()), weekStart)
     }
 
     var weekTotalHours: Double {

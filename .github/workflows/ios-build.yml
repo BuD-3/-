@@ -1,4 +1,4 @@
-name: iOS Build
+﻿name: iOS Build
 
 # 云端 Mac 编译 + 模拟器截图 + 未签名 IPA。
 #
@@ -29,6 +29,8 @@ concurrency:
 jobs:
   build:
     name: Compile for iOS Simulator
+    # 手动触发时跳过：截图 / IPA 任务自己会编译，不必重复
+    if: github.event_name != 'workflow_dispatch'
     runs-on: macos-15
     timeout-minutes: 25
 
@@ -107,7 +109,6 @@ jobs:
     # 只在手动触发且勾选了「截图」时跑，避免每次 push 都吃掉 66 计费分钟
     if: github.event_name == 'workflow_dispatch' && inputs.screenshots == true
     runs-on: macos-15
-    needs: build
     timeout-minutes: 30
     steps:
       - name: Checkout
@@ -195,6 +196,13 @@ jobs:
           sleep 7
           xcrun simctl io "$DEVICE" screenshot "screenshots/07-today-materials.png"
 
+          echo "--- 截取 09-report (学习周报) ---"
+          xcrun simctl terminate "" "" 2>/dev/null || true
+          sleep 1
+          xcrun simctl launch "" "" --report-preview --seed-demo
+          sleep 6
+          xcrun simctl io "" screenshot "screenshots/09-report.png"
+
           echo "--- 截取 08-home (桌面图标) ---"
           xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
           sleep 4
@@ -216,7 +224,6 @@ jobs:
     # 只在手动触发且勾选了「IPA」时跑
     if: github.event_name == 'workflow_dispatch' && inputs.ipa == true
     runs-on: macos-15
-    needs: build
     timeout-minutes: 25
 
     steps:
@@ -262,3 +269,4 @@ jobs:
           name: KaoyanWorkbench-unsigned-ipa
           path: KaoyanWorkbench-unsigned.ipa
           if-no-files-found: error
+

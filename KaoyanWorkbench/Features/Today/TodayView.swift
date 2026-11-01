@@ -606,9 +606,19 @@ struct TodayView: View {
                     Text("本周专注")
                         .font(.headline)
                     Spacer()
-                    Text("\(ClockFormatter.hoursText(store.weekTotalHours)) / \(ClockFormatter.hoursText(store.weekPlannedHours))")
-                        .font(.caption)
-                        .foregroundStyle(Theme.secondaryLabel)
+                    NavigationLink {
+                        WeeklyReportView()
+                    } label: {
+                        HStack(spacing: 3) {
+                            Text("\(ClockFormatter.hoursText(store.weekTotalHours)) / \(ClockFormatter.hoursText(store.weekPlannedHours))")
+                                .font(.caption)
+                                .foregroundStyle(Theme.secondaryLabel)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(Theme.tertiaryLabel)
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 HStack(alignment: .bottom, spacing: 8) {

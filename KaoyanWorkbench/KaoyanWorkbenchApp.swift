@@ -44,11 +44,20 @@ struct RootView: View {
         ProcessInfo.processInfo.arguments.contains("--library-preview")
     }
 
+    /// 自动化截图专用：直接打开学习周报
+    static var isReportPreview: Bool {
+        ProcessInfo.processInfo.arguments.contains("--report-preview")
+    }
+
     var body: some View {
         Group {
             if RootView.isLibraryPreview {
                 NavigationStack {
                     LibraryView()
+                }
+            } else if RootView.isReportPreview {
+                NavigationStack {
+                    WeeklyReportView()
                 }
             } else {
                 TabView(selection: $selection) {

@@ -1,4 +1,4 @@
-﻿//
+//
 //  ProfileView.swift
 //  KaoyanWorkbench
 //
@@ -309,7 +309,45 @@ struct ProfileView: View {
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
             }
             .buttonStyle(.plain)
+
+            NavigationLink {
+                WeeklyReportView()
+            } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Theme.accent.opacity(0.13))
+                            .frame(width: 36, height: 36)
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: 16))
+                            .foregroundStyle(Theme.accent)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("学习周报")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.label)
+                        Text(weeklySubtitle)
+                            .font(.caption2)
+                            .foregroundStyle(Theme.secondaryLabel)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.tertiaryLabel)
+                }
+                .padding(14)
+                .background(Theme.card)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+            }
+            .buttonStyle(.plain)
         }
+    }
+
+    /// 周报入口的副标题：本周完成率
+    private var weeklySubtitle: String {
+        let report = store.weekReport()
+        let pct = Int((report.ratio * 100).rounded())
+        return String(format: "本周 %.1f 小时 · 完成 %d%%", report.totalHours, pct)
     }
 
     /// 资料库入口的副标题：没有附件文件时不显示「0 KB」
