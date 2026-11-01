@@ -29,7 +29,9 @@ struct TodayView: View {
                         countdownCard
                         stageCard
 
-                        if CalendarHelper.isSunday(today) {
+                        if isLaunchDay {
+                            launchDayCard
+                        } else if CalendarHelper.isSunday(today) {
                             sundayCard
                         }
 
@@ -98,6 +100,18 @@ struct TodayView: View {
         max(0, CalendarHelper.daysBetween(PlanTimeline.startDate, today))
     }
 
+    /// 备考第几天：启动日当天即为第 1 天
+    private var dayNumber: Int { daysElapsed + 1 }
+
+    private var hasStarted: Bool {
+        CalendarHelper.startOfDay(today) >= CalendarHelper.startOfDay(PlanTimeline.startDate)
+    }
+
+    /// 今天是不是备考启动日
+    private var isLaunchDay: Bool {
+        CalendarHelper.isSameDay(today, PlanTimeline.startDate)
+    }
+
     private var countdownCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top) {
@@ -126,8 +140,8 @@ struct TodayView: View {
 
             HStack(spacing: 10) {
                 countdownChip(
-                    title: "已坚持",
-                    value: "\(daysElapsed) 天",
+                    title: "备考进度",
+                    value: hasStarted ? "第 \(dayNumber) 天" : "未启动",
                     symbol: "flame.fill",
                     tint: .orange
                 )
@@ -269,6 +283,40 @@ struct TodayView: View {
                 .foregroundStyle(Theme.label)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
+        }
+    }
+
+    // MARK: - 启动日
+
+    private var launchDayCard: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 10) {
+                    Image(systemName: "flag.checkered")
+                        .font(.title3)
+                        .foregroundStyle(Theme.accent)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("今天是备考第 1 天")
+                            .font(.subheadline.weight(.semibold))
+                        Text("14 个月从今天开始算")
+                            .font(.caption)
+                            .foregroundStyle(Theme.secondaryLabel)
+                    }
+                    Spacer()
+                }
+
+                if CalendarHelper.isSunday(today) {
+                    Text("今天是周日，按计划本来就该休息——Day 1 撞上休息日不算坏事：把书桌、资料、作息定下来，明天 07:20 正式开始第一章。")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.secondaryLabel)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("先去把今天课表第一项打勾。开局不需要完美，只需要真的开始。")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.secondaryLabel)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
     }
 
