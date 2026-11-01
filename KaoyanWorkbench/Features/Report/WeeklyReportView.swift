@@ -135,7 +135,24 @@ struct WeeklyReportView: View {
         }
     }
 
+    @ViewBuilder
     private var comparisonRow: some View {
+        if report.lastWeekHours <= 0 {
+            // 上周没记录时，别显示「+45.8 小时」这种虚假涨幅
+            HStack(spacing: 5) {
+                Image(systemName: "sparkles")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.accent)
+                Text(report.totalHours > 0 ? "上周没有记录，这周就是起点" : "还没有开始记录")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.secondaryLabel)
+            }
+        } else {
+            comparisonDelta
+        }
+    }
+
+    private var comparisonDelta: some View {
         let diff = report.comparedToLastWeek
         let sign = diff >= 0 ? "+" : "−"
         let text = String(format: "%@%.1f", sign, abs(diff))
