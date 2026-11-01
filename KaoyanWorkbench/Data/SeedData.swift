@@ -8,7 +8,7 @@
 import Foundation
 
 enum SeedData {
-    /// 04 进度追踪：40 个进度项
+    /// 04 进度追踪：37 个进度项（单词背诵项已按需求移除，由使用者自行规划）
     static func progressItems() -> [ProgressItem] {
         var items: [ProgressItem] = []
 

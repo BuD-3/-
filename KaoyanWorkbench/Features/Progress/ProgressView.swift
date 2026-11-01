@@ -2,7 +2,7 @@
 //  ProgressView.swift
 //  KaoyanWorkbench
 //
-//  进度追踪：四科 40 个进度项，按模块折叠，自动算完成率。
+//  进度追踪：四科进度项（当前 37 项），按模块折叠，自动算完成率。
 //
 
 import SwiftUI
@@ -286,7 +286,7 @@ struct ProgressView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("重置进度表")
                         .font(.caption.weight(.semibold))
-                    Text("把 40 个进度项恢复为「未开始」，不影响打卡和错题。")
+                    Text("把 \(store.progressItems.count) 个进度项恢复为「未开始」，不影响打卡和错题。")
                         .font(.caption2)
                         .foregroundStyle(Theme.secondaryLabel)
                 }
