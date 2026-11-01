@@ -69,7 +69,7 @@ struct PlanView: View {
         return Card(padding: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("四个阶段")
-                    .font(.caption.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(Theme.secondaryLabel)
                 FlowRow(spacing: 8) {
                     ForEach(stages) { stage in
@@ -78,7 +78,7 @@ struct PlanView: View {
                                 .fill(Theme.color(for: stage))
                                 .frame(width: 6, height: 6)
                             Text(stage.rawValue)
-                                .font(.caption2)
+                                .font(.footnote)
                                 .foregroundStyle(Theme.secondaryLabel)
                         }
                         .padding(.horizontal, 8)
@@ -95,17 +95,17 @@ struct PlanView: View {
         Card(padding: 0) {
             VStack(alignment: .leading, spacing: 0) {
                 // 头部
-                HStack(spacing: 10) {
-                    RoundedRectangle(cornerRadius: 2)
+                HStack(spacing: 12) {
+                    RoundedRectangle(cornerRadius: 4)
                         .fill(Theme.color(for: month.stage))
                         .frame(width: 4)
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack(spacing: 6) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 8) {
                             Text(month.title)
                                 .font(.subheadline.weight(.semibold))
                             if isCurrent {
                                 Text("进行中")
-                                    .font(.caption2.weight(.bold))
+                                    .font(.footnote.weight(.bold))
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
                                     .background(Theme.accent.opacity(0.14))
@@ -114,7 +114,7 @@ struct PlanView: View {
                             }
                         }
                         Text(month.stage.rawValue)
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.color(for: month.stage))
                     }
                     Spacer()
@@ -125,7 +125,7 @@ struct PlanView: View {
 
                 Divider().padding(.leading, 14)
 
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 12) {
                     monthRow(subject: .math, text: month.math)
                     monthRow(subject: .cs408, text: month.cs408)
                     monthRow(subject: .english, text: month.english)
@@ -136,12 +136,12 @@ struct PlanView: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
 
-                HStack(alignment: .top, spacing: 6) {
+                HStack(alignment: .top, spacing: 8) {
                     Image(systemName: "target")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(.orange)
                     Text(month.milestone)
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
@@ -161,7 +161,7 @@ struct PlanView: View {
             SubjectBadge(subject: subject, compact: true)
                 .padding(.top, 1)
             Text(text)
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(Theme.label)
                 .lineLimit(3)
             Spacer(minLength: 0)
@@ -171,7 +171,7 @@ struct PlanView: View {
     // MARK: - 关键节点
 
     private var milestonesContent: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             ForEach(MilestoneData.all) { milestone in
                 milestoneRow(milestone)
             }
@@ -185,29 +185,29 @@ struct PlanView: View {
         let isToday = CalendarHelper.isSameDay(mDate, today)
         let daysAway = CalendarHelper.daysBetween(today, mDate)
 
-        return Card(padding: 14) {
+        return Card(padding: 12) {
             HStack(alignment: .top, spacing: 12) {
-                VStack(spacing: 2) {
+                VStack(spacing: 4) {
                     Text(String(format: "%02d", milestone.month))
-                        .font(.caption.weight(.bold))
+                        .font(.footnote.weight(.bold))
                         .foregroundStyle(isPast ? Theme.tertiaryLabel : Theme.accent)
                     Text("\(milestone.year)")
-                        .font(.system(size: 8))
+                        .font(.system(size: 11))
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
                 .frame(width: 30)
                 .padding(.vertical, 5)
                 .background(isPast ? Theme.tertiaryCard : Theme.accent.opacity(0.10))
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 8) {
                         Text(milestone.title)
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(isPast ? Theme.secondaryLabel : Theme.label)
                         if isToday {
                             Text("今天")
-                                .font(.caption2.weight(.bold))
+                                .font(.footnote.weight(.bold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 1.5)
@@ -215,13 +215,13 @@ struct PlanView: View {
                                 .clipShape(Capsule())
                         } else if !isPast && daysAway <= 30 {
                             Text("\(daysAway) 天后")
-                                .font(.caption2.weight(.semibold))
+                                .font(.footnote.weight(.semibold))
                                 .foregroundStyle(.orange)
                         }
                         Spacer()
                     }
                     Text(milestone.action)
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -232,9 +232,9 @@ struct PlanView: View {
     // MARK: - 目标分数
 
     private var targetsContent: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 12) {
             Card {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("总分目标")
                             .font(.headline)
@@ -244,7 +244,7 @@ struct PlanView: View {
                             .foregroundStyle(Theme.accent)
                     }
                     Text("2026 国家线 A 区工学 264 分，按 353 分预留 90 分缓冲。过 264 即有机会，353 为稳态目标。")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
 
@@ -277,12 +277,12 @@ struct PlanView: View {
     }
 
     private func scorePill(_ label: String, _ value: String, _ color: Color) -> some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 4) {
             Text(value)
                 .font(.system(size: 15, weight: .bold, design: .rounded))
                 .foregroundStyle(color)
             Text(label)
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(Theme.tertiaryLabel)
         }
         .frame(maxWidth: .infinity)
@@ -294,11 +294,11 @@ struct PlanView: View {
     private func subjectScoreCard(_ subject: Subject) -> some View {
         let stats = store.progressStats(for: subject)
         return Card {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
                     SubjectBadge(subject: subject)
                     Text("满分 \(subject.fullScore)")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                     Spacer()
                     Text("目标 \(subject.targetScore)")
@@ -331,17 +331,17 @@ struct PlanView: View {
                     Spacer()
                     Text("冲刺 \(subject.sprintScore)")
                 }
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(Theme.tertiaryLabel)
 
                 Divider()
 
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Text("进度项")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                     Text("\(stats.done)/\(stats.total)")
-                        .font(.caption2.weight(.semibold))
+                        .font(.footnote.weight(.semibold))
                         .foregroundStyle(Theme.secondaryLabel)
                     ProgressBar(value: stats.ratio, tint: Theme.color(for: subject), height: 5)
                 }
@@ -350,13 +350,13 @@ struct PlanView: View {
     }
 
     private func infoRow(_ label: String, _ value: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: 12) {
             Text(label)
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(Theme.tertiaryLabel)
                 .frame(width: 44, alignment: .leading)
             Text(value)
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(Theme.secondaryLabel)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)

@@ -86,7 +86,7 @@ struct ReviewView: View {
                         .font(.headline)
                     Spacer()
                     Text("\(dueQueue.count) 题待处理")
-                        .font(.caption.weight(.medium))
+                        .font(.footnote.weight(.medium))
                         .foregroundStyle(dueQueue.isEmpty ? Theme.secondaryLabel : .orange)
                 }
 
@@ -109,7 +109,7 @@ struct ReviewView: View {
     }
 
     private var filterBar: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             Picker("筛选", selection: $filter) {
                 ForEach(ReviewFilter.allCases) { f in
                     Text(f.rawValue).tag(f)
@@ -137,7 +137,7 @@ struct ReviewView: View {
             }
         } label: {
             Text(label)
-                .font(.caption.weight(.medium))
+                .font(.footnote.weight(.medium))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(isSelected ? color : Theme.card)
@@ -164,57 +164,57 @@ struct ReviewView: View {
     private func mistakeCard(_ mistake: Mistake) -> some View {
         let isDueNow = mistake.isWeekReviewDue() || (mistake.status == .fresh && CalendarHelper.isSameDay(mistake.createdAt, Date()))
         return Card {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
                     SubjectBadge(subject: mistake.subject, compact: true)
                     Text(mistake.displaySource)
-                        .font(.caption.weight(.medium))
+                        .font(.footnote.weight(.medium))
                         .foregroundStyle(Theme.secondaryLabel)
                         .lineLimit(1)
                     Spacer()
                     statusTag(mistake)
                 }
 
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Image(systemName: "mappin.circle.fill")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                     Text(mistake.point.isEmpty ? "未填考点" : mistake.point)
                         .font(.subheadline.weight(.medium))
                         .lineLimit(2)
                 }
 
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Text(mistake.errorType.rawValue)
-                        .font(.caption2)
+                        .font(.footnote)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(Color.red.opacity(0.10))
                         .foregroundStyle(.red)
                         .clipShape(Capsule())
                     Text(ClockFormatter.monthDay(mistake.createdAt) + " 录入")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                     if mistake.status == .pendingDay {
                         Text("回炉② \(ClockFormatter.monthDay(mistake.weekReviewDue))")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                     Spacer()
                 }
 
                 if !mistake.correctIdea.isEmpty {
-                    HStack(alignment: .top, spacing: 6) {
+                    HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "lightbulb.fill")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(.yellow)
                             .padding(.top, 2)
                         Text(mistake.correctIdea)
-                            .font(.footnote)
+                            .font(.subheadline)
                             .foregroundStyle(Theme.label)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    .padding(10)
+                    .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Theme.tertiaryCard)
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -226,7 +226,7 @@ struct ReviewView: View {
                             withAnimation { store.markSameDayReviewed(mistake) }
                         } label: {
                             Label("完成回炉①", systemImage: "arrow.clockwise")
-                                .font(.caption.weight(.semibold))
+                                .font(.footnote.weight(.semibold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 8)
                                 .background(Theme.accent)
@@ -242,7 +242,7 @@ struct ReviewView: View {
                                 isDueNow ? "完成回炉②（已到期）" : "完成回炉②",
                                 systemImage: isDueNow ? "checkmark.circle.fill" : "calendar"
                             )
-                            .font(.caption.weight(.semibold))
+                            .font(.footnote.weight(.semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
                             .background(isDueNow ? Color.orange : Theme.accent.opacity(0.15))
@@ -251,11 +251,11 @@ struct ReviewView: View {
                         }
                         .buttonStyle(.plain)
                     } else {
-                        HStack(spacing: 5) {
+                        HStack(spacing: 8) {
                             Image(systemName: "checkmark.seal.fill")
                                 .foregroundStyle(Color(red: 0.18, green: 0.68, blue: 0.42))
                             Text("两次回炉都通过")
-                                .font(.caption.weight(.medium))
+                                .font(.footnote.weight(.medium))
                                 .foregroundStyle(Theme.secondaryLabel)
                         }
                         .frame(maxWidth: .infinity)
@@ -267,7 +267,7 @@ struct ReviewView: View {
                             store.undoReviews(mistake)
                         } label: {
                             Image(systemName: "arrow.uturn.backward")
-                                .font(.caption)
+                                .font(.footnote)
                                 .foregroundStyle(Theme.tertiaryLabel)
                         }
                         .buttonStyle(.plain)
@@ -302,7 +302,7 @@ struct ReviewView: View {
             }
         }()
         return Text(text)
-            .font(.caption2.weight(.semibold))
+            .font(.footnote.weight(.semibold))
             .padding(.horizontal, 7)
             .padding(.vertical, 2.5)
             .background(color.opacity(0.13))

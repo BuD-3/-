@@ -134,10 +134,10 @@ struct MaterialDetailView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(maxHeight: 460)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                     Text("\(Int(image.size.width)) × \(Int(image.size.height))")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
                 .frame(maxWidth: .infinity)
@@ -146,16 +146,16 @@ struct MaterialDetailView: View {
                 // PDF / 文本 用系统 QuickLook
                 QuickLookPreview(url: url)
                     .frame(height: 460)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .cardStyle(padding: 0)
             }
         } else if material.hasFile {
             Card {
-                HStack(spacing: 10) {
+                HStack(spacing: 12) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
                     Text("附件文件找不到了，可能被系统清理过。")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                 }
             }
@@ -164,7 +164,7 @@ struct MaterialDetailView: View {
 
     private func infoCard(_ material: StudyMaterial) -> some View {
         Card {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
                     Image(systemName: material.kind.symbolName)
                         .foregroundStyle(Theme.accent)
@@ -172,7 +172,7 @@ struct MaterialDetailView: View {
                         .font(.subheadline.weight(.semibold))
                     Spacer()
                     Text(ClockFormatter.monthDay(material.createdAt))
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
 
@@ -208,11 +208,11 @@ struct MaterialDetailView: View {
                         UIPasteboard.general.string = material.body
                     } label: {
                         Label("复制", systemImage: "doc.on.doc")
-                            .font(.caption)
+                            .font(.footnote)
                     }
                 }
                 Text(material.body)
-                    .font(.footnote)
+                    .font(.subheadline)
                     .foregroundStyle(Theme.label)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -221,13 +221,13 @@ struct MaterialDetailView: View {
     }
 
     private func infoRow(_ label: String, _ value: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: 12) {
             Text(label)
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(Theme.tertiaryLabel)
                 .frame(width: 36, alignment: .leading)
             Text(value)
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(Theme.secondaryLabel)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)

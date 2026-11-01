@@ -218,11 +218,11 @@ struct ProfileView: View {
                             .font(.system(size: 20))
                             .foregroundStyle(Theme.accent)
                     }
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("2028 考研 · 河南大学")
                             .font(.subheadline.weight(.semibold))
                         Text("085410 人工智能（专硕）· 脱产 14 个月")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                     }
                     Spacer()
@@ -252,8 +252,8 @@ struct ProfileView: View {
     // MARK: - 模块入口
 
     private var moduleGrid: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 10) {
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
                 NavigationLink {
                     HealthView()
                 } label: {
@@ -288,23 +288,23 @@ struct ProfileView: View {
                             .fill(Color(red: 0.55, green: 0.32, blue: 0.86).opacity(0.13))
                             .frame(width: 36, height: 36)
                         Image(systemName: "books.vertical.fill")
-                            .font(.system(size: 16))
+                            .font(.system(size: 17))
                             .foregroundStyle(Color(red: 0.55, green: 0.32, blue: 0.86))
                     }
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("资料库")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Theme.label)
                         Text(librarySubtitle)
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                     }
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
-                .padding(14)
+                .padding(12)
                 .background(Theme.card)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
             }
@@ -319,23 +319,23 @@ struct ProfileView: View {
                             .fill(Theme.accent.opacity(0.13))
                             .frame(width: 36, height: 36)
                         Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.system(size: 16))
+                            .font(.system(size: 17))
                             .foregroundStyle(Theme.accent)
                     }
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("学习周报")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Theme.label)
                         Text(weeklySubtitle)
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                     }
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
-                .padding(14)
+                .padding(12)
                 .background(Theme.card)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
             }
@@ -362,17 +362,17 @@ struct ProfileView: View {
     private func moduleTile(title: String, subtitle: String, symbol: String, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Image(systemName: symbol)
-                .font(.system(size: 18))
+                .font(.system(size: 20))
                 .foregroundStyle(tint)
             Text(title)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Theme.label)
             Text(subtitle)
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(Theme.secondaryLabel)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
+        .padding(12)
         .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
     }
@@ -392,10 +392,10 @@ struct ProfileView: View {
     }
 
     private var reminderHeader: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             Image(systemName: "bell.badge.fill")
                 .foregroundStyle(.orange)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("错题回炉提醒")
                     .font(.headline)
             }
@@ -415,14 +415,14 @@ struct ProfileView: View {
     }
 
     private var reminderTimePicker: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("提醒时间")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(Theme.secondaryLabel)
                 Spacer()
                 Text(String(format: "%02d:00", store.settings.reminderHour))
-                    .font(.caption.monospacedDigit().weight(.medium))
+                    .font(.footnote.monospacedDigit().weight(.medium))
                     .foregroundStyle(Theme.secondaryLabel)
             }
             Slider(
@@ -436,12 +436,12 @@ struct ProfileView: View {
             .tint(.orange)
 
             if permission == .denied {
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(.orange)
                     Text("通知权限被拒绝了，去系统设置里打开")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                     Spacer()
                     Button("去设置") {
@@ -449,15 +449,15 @@ struct ProfileView: View {
                             UIApplication.shared.open(url)
                         }
                     }
-                    .font(.caption2.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                 }
             } else if permission == .authorized {
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Color(red: 0.18, green: 0.68, blue: 0.42))
                     Text("已排程 \(pendingCount) 条提醒")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                     Spacer()
                 }
@@ -469,7 +469,7 @@ struct ProfileView: View {
 
     private var todoCard: some View {
         Card {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Text("待办")
                         .font(.headline)
@@ -485,25 +485,25 @@ struct ProfileView: View {
                 let open = store.openTodos
                 if open.isEmpty {
                     Text("没有待办。杂事也记在这里，别占脑子。")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                 } else {
                     ForEach(open.prefix(8)) { todo in
                         Button {
                             withAnimation { store.toggleTodo(todo) }
                         } label: {
-                            HStack(alignment: .top, spacing: 9) {
+                            HStack(alignment: .top, spacing: 8) {
                                 Image(systemName: "circle")
                                     .font(.system(size: 15))
                                     .foregroundStyle(Theme.tertiaryLabel)
-                                VStack(alignment: .leading, spacing: 2) {
+                                VStack(alignment: .leading, spacing: 4) {
                                     Text(todo.title)
-                                        .font(.footnote)
+                                        .font(.subheadline)
                                         .foregroundStyle(Theme.label)
                                         .multilineTextAlignment(.leading)
-                                    HStack(spacing: 5) {
+                                    HStack(spacing: 8) {
                                         Text(todo.tag.rawValue)
-                                            .font(.system(size: 9, weight: .medium))
+                                            .font(.system(size: 11, weight: .medium))
                                             .padding(.horizontal, 5)
                                             .padding(.vertical, 1.5)
                                             .background(Theme.tertiaryCard)
@@ -511,7 +511,7 @@ struct ProfileView: View {
                                             .clipShape(Capsule())
                                         if let due = todo.dueDate {
                                             Text(ClockFormatter.monthDay(due))
-                                                .font(.caption2)
+                                                .font(.footnote)
                                                 .foregroundStyle(todo.isOverdue ? .red : Theme.tertiaryLabel)
                                         }
                                     }
@@ -534,7 +534,7 @@ struct ProfileView: View {
                     if doneCount > 0 {
                         Divider()
                         Text("已完成 \(doneCount) 项")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                 }
@@ -556,22 +556,22 @@ struct ProfileView: View {
             .map { $0 }
 
         return Card {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("复盘历史")
                     .font(.headline)
 
                 if history.isEmpty {
                     Text("还没有复盘记录。点主页右上角的笔，写三行就好。")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                 } else {
                     ForEach(history) { item in
-                        VStack(alignment: .leading, spacing: 3) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text(ClockFormatter.monthDay(item.date))
-                                .font(.caption2.weight(.semibold))
+                                .font(.footnote.weight(.semibold))
                                 .foregroundStyle(Theme.accent)
                             Text(item.text)
-                                .font(.caption)
+                                .font(.footnote)
                                 .foregroundStyle(Theme.secondaryLabel)
                                 .lineLimit(3)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -598,13 +598,13 @@ struct ProfileView: View {
                 } label: {
                     HStack {
                         Label("导出完整备份", systemImage: "square.and.arrow.up")
-                            .font(.footnote)
+                            .font(.subheadline)
                         Spacer()
                         if isPreparingBackup {
                             ProgressView().scaleEffect(0.7)
                         } else {
                             Image(systemName: "chevron.right")
-                                .font(.caption2)
+                                .font(.footnote)
                                 .foregroundStyle(Theme.tertiaryLabel)
                         }
                     }
@@ -619,10 +619,10 @@ struct ProfileView: View {
                 } label: {
                     HStack {
                         Label("从备份恢复", systemImage: "square.and.arrow.down")
-                            .font(.footnote)
+                            .font(.subheadline)
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                 }
@@ -635,11 +635,11 @@ struct ProfileView: View {
                 } label: {
                     HStack {
                         Label("清空所有数据", systemImage: "trash")
-                            .font(.footnote)
+                            .font(.subheadline)
                             .foregroundStyle(.red)
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                 }
@@ -650,12 +650,12 @@ struct ProfileView: View {
     }
 
     private var backupStatusLine: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             Image(systemName: store.settings.lastBackupAt == nil ? "exclamationmark.circle" : "checkmark.circle.fill")
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(store.settings.lastBackupAt == nil ? .orange : Color(red: 0.18, green: 0.68, blue: 0.42))
             Text(backupStatusText)
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(Theme.secondaryLabel)
             Spacer()
         }
@@ -674,12 +674,12 @@ struct ProfileView: View {
     // MARK: - 关于
 
     private var aboutCard: some View {
-        Card(padding: 14) {
-            VStack(alignment: .leading, spacing: 6) {
+        Card(padding: 12) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("关于这套计划")
-                    .font(.caption.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                 Text("数据源：2028 考研作战计划.xlsx · 按 2026-11-01 启动、2027-12-18 初试计算")
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(Theme.tertiaryLabel)
             }
         }

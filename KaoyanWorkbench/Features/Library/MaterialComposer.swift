@@ -65,7 +65,7 @@ struct MaterialComposer: View {
                 if let errorMessage {
                     Section {
                         Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(.red)
                     }
                 }
@@ -102,15 +102,15 @@ struct MaterialComposer: View {
     private var attachmentSection: some View {
         Section {
             if let fileName {
-                HStack(spacing: 10) {
+                HStack(spacing: 12) {
                     Image(systemName: kind.symbolName)
                         .foregroundStyle(Theme.accent)
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text(fileNameLabel.isEmpty ? "已选择文件" : fileNameLabel)
-                            .font(.footnote)
+                            .font(.subheadline)
                             .lineLimit(1)
                         Text(fileSize > 0 ? MaterialStorage.formattedSize(fileSize) : "已附加")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                     Spacer()
@@ -120,26 +120,26 @@ struct MaterialComposer: View {
                         self.fileSize = 0
                         self.fileNameLabel = ""
                     }
-                    .font(.caption)
+                    .font(.footnote)
                 }
             } else {
                 Button {
                     showingFileImporter = true
                 } label: {
                     Label("导入文件（PDF / 图片 / 文本）", systemImage: "doc.badge.plus")
-                        .font(.footnote)
+                        .font(.subheadline)
                 }
 
                 PhotosPicker(selection: $photoItem, matching: .images) {
                     Label("从相册选一张图", systemImage: "photo.badge.plus")
-                        .font(.footnote)
+                        .font(.subheadline)
                 }
 
                 if isImportingPhoto {
                     HStack(spacing: 8) {
                         ProgressView()
                         Text("正在读取图片…")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                     }
                 }
@@ -163,7 +163,7 @@ struct MaterialComposer: View {
                     .overlay(alignment: .topLeading) {
                         if textBody.isEmpty {
                             Text("也可以直接写文字笔记…")
-                                .font(.footnote)
+                                .font(.subheadline)
                                 .foregroundStyle(Theme.tertiaryLabel)
                                 .padding(.top, 8)
                                 .allowsHitTesting(false)

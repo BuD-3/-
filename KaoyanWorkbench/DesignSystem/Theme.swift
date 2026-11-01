@@ -73,7 +73,7 @@ enum Theme {
     }
 
     static let spacing: CGFloat = 16
-    static let cardRadius: CGFloat = 18
+    static let cardRadius: CGFloat = 16
 }
 
 // MARK: - 卡片容器
@@ -105,19 +105,19 @@ struct SectionHeader: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline)
                 if let subtitle {
                     Text(subtitle)
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                 }
             }
             Spacer()
             if let trailing {
                 Text(trailing)
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(Theme.tertiaryLabel)
             }
         }
@@ -175,15 +175,15 @@ struct StatTile: View {
     var symbol: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
                 if let symbol {
                     Image(systemName: symbol)
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(tint)
                 }
                 Text(title)
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(Theme.secondaryLabel)
             }
             Text(value)
@@ -193,7 +193,7 @@ struct StatTile: View {
                 .lineLimit(1)
             if let caption {
                 Text(caption)
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(Theme.tertiaryLabel)
                     .lineLimit(1)
             }
@@ -201,7 +201,7 @@ struct StatTile: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(Theme.card)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 
@@ -213,7 +213,7 @@ struct SubjectBadge: View {
 
     var body: some View {
         Text(compact ? subject.shortName : subject.rawValue)
-            .font(.caption2.weight(.semibold))
+            .font(.footnote.weight(.semibold))
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(Theme.color(for: subject).opacity(0.13))
@@ -230,7 +230,7 @@ struct EmptyStateView: View {
     let message: String
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             Image(systemName: symbol)
                 .font(.system(size: 34))
                 .foregroundStyle(Theme.tertiaryLabel)

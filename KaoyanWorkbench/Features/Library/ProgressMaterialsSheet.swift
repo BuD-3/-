@@ -98,25 +98,25 @@ struct ProgressMaterialsSheet: View {
                 HStack(spacing: 8) {
                     SubjectBadge(subject: item.subject, compact: true)
                     Text(item.module)
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                     Spacer()
                     Text("\(materials.count) 份")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
                 Text(item.title)
                     .font(.subheadline.weight(.semibold))
                     .fixedSize(horizontal: false, vertical: true)
                 Text("计划 \(item.planMonths)\(item.isDone ? " · 已完成" : "")")
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(Theme.tertiaryLabel)
             }
         }
     }
 
     private func row(_ material: StudyMaterial) -> some View {
-        Card(padding: 14) {
+        Card(padding: 12) {
             HStack(spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -132,23 +132,23 @@ struct ProgressMaterialsSheet: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     } else {
                         Image(systemName: material.kind.symbolName)
-                            .font(.system(size: 16))
+                            .font(.system(size: 17))
                             .foregroundStyle(Theme.accent)
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(material.title)
                         .font(.subheadline.weight(.medium))
                         .lineLimit(1)
                     Text(material.summary)
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                         .lineLimit(1)
                 }
                 Spacer(minLength: 0)
                 Text(ClockFormatter.monthDay(material.createdAt))
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(Theme.tertiaryLabel)
             }
         }

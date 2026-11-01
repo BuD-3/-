@@ -115,7 +115,7 @@ struct TodayView: View {
     }
 
     private var countdownCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(ClockFormatter.weekdayShort(today))
@@ -125,7 +125,7 @@ struct TodayView: View {
                         .font(.system(size: 30, weight: .bold, design: .rounded))
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: 4) {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text("\(daysLeft)")
                             .font(.system(size: 34, weight: .bold, design: .rounded))
@@ -135,12 +135,12 @@ struct TodayView: View {
                             .foregroundStyle(Theme.secondaryLabel)
                     }
                     Text("距初试")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
             }
 
-            HStack(spacing: 10) {
+            HStack(spacing: 12) {
                 countdownChip(
                     title: "备考进度",
                     value: hasStarted ? "第 \(dayNumber) 天" : "未启动",
@@ -164,16 +164,16 @@ struct TodayView: View {
             if let next = MilestoneData.next(after: today) {
                 HStack(spacing: 8) {
                     Image(systemName: "flag.fill")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(.orange)
                     Text("下一节点：\(next.title) · \(next.dateText)")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                     Spacer()
                 }
             }
         }
-        .padding(18)
+        .padding(16)
         .background(
             LinearGradient(
                 colors: [Theme.card, Theme.card.opacity(0.92)],
@@ -181,9 +181,9 @@ struct TodayView: View {
                 endPoint: .bottomTrailing
             )
         )
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(Theme.accent.opacity(0.08), lineWidth: 1)
         )
     }
@@ -191,18 +191,18 @@ struct TodayView: View {
     private func countdownChip(title: String, value: String, symbol: String, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Image(systemName: symbol)
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(tint)
             Text(value)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Text(title)
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(Theme.tertiaryLabel)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(10)
+        .padding(12)
         .background(Theme.tertiaryCard)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
@@ -223,7 +223,7 @@ struct TodayView: View {
     private func stageCardFront(stage: PlanStage, month: MonthPlan?) -> some View {
         Card {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 7) {
+                HStack(spacing: 8) {
                     Circle()
                         .fill(Theme.color(for: stage))
                         .frame(width: 8, height: 8)
@@ -232,14 +232,14 @@ struct TodayView: View {
                         .foregroundStyle(Theme.color(for: stage))
                     Spacer()
                     Text(month?.title ?? "—")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                     Image(systemName: "rotate.3d")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
 
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     if let month {
                         SubjectBadge(subject: .math, compact: true)
                         SubjectBadge(subject: .cs408, compact: true)
@@ -258,7 +258,7 @@ struct TodayView: View {
     private func stageCardBack(stage: PlanStage, month: MonthPlan?) -> some View {
         Card {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 7) {
+                HStack(spacing: 8) {
                     Circle()
                         .fill(Theme.color(for: stage))
                         .frame(width: 8, height: 8)
@@ -267,14 +267,14 @@ struct TodayView: View {
                         .foregroundStyle(Theme.color(for: stage))
                     Spacer()
                     Text(month?.title ?? "—")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
 
                 Divider()
 
                 if let month {
-                    VStack(alignment: .leading, spacing: 9) {
+                    VStack(alignment: .leading, spacing: 8) {
                         focusRow(subject: .math, text: month.math)
                         focusRow(subject: .cs408, text: month.cs408)
                         focusRow(subject: .english, text: month.english)
@@ -283,13 +283,13 @@ struct TodayView: View {
                         }
                     }
 
-                    HStack(alignment: .top, spacing: 6) {
+                    HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "target")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(.orange)
                             .padding(.top, 2)
                         Text("本月里程碑：\(month.milestone)")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                     }
                 }
@@ -302,7 +302,7 @@ struct TodayView: View {
             SubjectBadge(subject: subject, compact: true)
                 .padding(.top, 1)
             Text(text)
-                .font(.footnote)
+                .font(.subheadline)
                 .foregroundStyle(Theme.label)
                 .lineLimit(2)
             Spacer(minLength: 0)
@@ -314,15 +314,15 @@ struct TodayView: View {
     private var launchDayCard: some View {
         Card {
             VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 10) {
+                HStack(spacing: 12) {
                     Image(systemName: "flag.checkered")
                         .font(.title3)
                         .foregroundStyle(Theme.accent)
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("今天是备考第 1 天")
                             .font(.subheadline.weight(.semibold))
                         Text("14 个月从今天开始算")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                     }
                     Spacer()
@@ -330,12 +330,12 @@ struct TodayView: View {
 
                 if CalendarHelper.isSunday(today) {
                     Text("今天是周日，按计划本来就该休息——Day 1 撞上休息日不算坏事：把书桌、资料、作息定下来，明天 07:20 正式开始第一章。")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
                     Text("先去把今天课表第一项打勾。开局不需要完美，只需要真的开始。")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -351,11 +351,11 @@ struct TodayView: View {
                 Image(systemName: "leaf.fill")
                     .font(.title3)
                     .foregroundStyle(Color(red: 0.30, green: 0.65, blue: 0.42))
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text("今天是休息日")
                         .font(.subheadline.weight(.semibold))
                     Text("每周必须休满一天，这是计划的一部分。别愧疚。")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                 }
                 Spacer()
@@ -367,13 +367,13 @@ struct TodayView: View {
 
     private var timetableCard: some View {
         Card {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("今日课表")
                             .font(.headline)
                         Text("已完成 \(ClockFormatter.hoursText(studiedHours)) / 计划 \(ClockFormatter.hoursText(plannedHours))")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                     }
                     Spacer()
@@ -432,14 +432,14 @@ struct TodayView: View {
                     }
                     .frame(width: 22)
 
-                    VStack(alignment: .leading, spacing: 3) {
-                        HStack(spacing: 6) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 8) {
                             Text(block.timeRangeText)
-                                .font(.caption.monospacedDigit())
+                                .font(.footnote.monospacedDigit())
                                 .foregroundStyle(Theme.tertiaryLabel)
                             if isStudy {
                                 Text(ClockFormatter.hoursText(block.durationHours))
-                                    .font(.caption2)
+                                    .font(.footnote)
                                     .foregroundStyle(Theme.tertiaryLabel)
                             }
                         }
@@ -463,11 +463,11 @@ struct TodayView: View {
             Image(systemName: "plus.circle")
                 .foregroundStyle(Theme.secondaryLabel)
             Text("额外补记")
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(Theme.secondaryLabel)
             Spacer()
             Text(record.extraStudyMinutes == 0 ? "无" : ClockFormatter.minutesText(record.extraStudyMinutes))
-                .font(.caption.weight(.medium))
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(Theme.secondaryLabel)
                 .monospacedDigit()
             Stepper(
@@ -499,7 +499,7 @@ struct TodayView: View {
 
     private var materialHeader: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("今天学过什么")
                     .font(.headline)
             }
@@ -527,16 +527,16 @@ struct TodayView: View {
         Button {
             showingComposer = true
         } label: {
-            HStack(spacing: 10) {
+            HStack(spacing: 12) {
                 Image(systemName: "tray.and.arrow.down")
                     .font(.title3)
                     .foregroundStyle(Theme.accent)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text("还没有记录")
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(Theme.label)
                     Text("点这里上传今天学的资料")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
                 Spacer()
@@ -560,28 +560,28 @@ struct TodayView: View {
     }
 
     private func materialRow(_ material: StudyMaterial) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             ZStack {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(Theme.accent.opacity(0.10))
                     .frame(width: 36, height: 36)
                 Image(systemName: material.kind.symbolName)
-                    .font(.system(size: 14))
+                    .font(.system(size: 15))
                     .foregroundStyle(Theme.accent)
             }
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(material.title)
-                    .font(.footnote.weight(.medium))
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(Theme.label)
                     .lineLimit(1)
                 Text(material.summary)
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(Theme.tertiaryLabel)
                     .lineLimit(1)
             }
             Spacer(minLength: 0)
             Image(systemName: "chevron.right")
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(Theme.tertiaryLabel)
         }
         .padding(.vertical, 4)
@@ -601,10 +601,10 @@ struct TodayView: View {
                         reflectionDraft = record.reflection
                         showingReflection = true
                     }
-                    .font(.caption)
+                    .font(.footnote)
                 }
                 Text(record.reflection)
-                    .font(.footnote)
+                    .font(.subheadline)
                     .foregroundStyle(Theme.secondaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -625,12 +625,12 @@ struct TodayView: View {
                     NavigationLink {
                         WeeklyReportView()
                     } label: {
-                        HStack(spacing: 3) {
+                        HStack(spacing: 4) {
                             Text("\(ClockFormatter.hoursText(store.weekTotalHours)) / \(ClockFormatter.hoursText(store.weekPlannedHours))")
-                                .font(.caption)
+                                .font(.footnote)
                                 .foregroundStyle(Theme.secondaryLabel)
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 9, weight: .semibold))
+                                .font(.system(size: 11, weight: .semibold))
                                 .foregroundStyle(Theme.tertiaryLabel)
                         }
                     }
@@ -639,7 +639,7 @@ struct TodayView: View {
 
                 HStack(alignment: .bottom, spacing: 8) {
                     ForEach(week) { day in
-                        VStack(spacing: 5) {
+                        VStack(spacing: 8) {
                             ZStack(alignment: .bottom) {
                                 RoundedRectangle(cornerRadius: 4, style: .continuous)
                                     .fill(Theme.accent.opacity(0.10))
@@ -649,7 +649,7 @@ struct TodayView: View {
                                     .frame(height: max(3, 56 * (day.hours / maxHours)))
                             }
                             Text(day.weekdayLabel)
-                                .font(.caption2)
+                                .font(.footnote)
                                 .foregroundStyle(CalendarHelper.isSameDay(day.date, Date()) ? Theme.accent : Theme.tertiaryLabel)
                         }
                         .frame(maxWidth: .infinity)
@@ -661,12 +661,12 @@ struct TodayView: View {
                     HStack(spacing: 12) {
                         if todayHealth.exerciseMinutes > 0 {
                             Label(ClockFormatter.minutesText(todayHealth.exerciseMinutes), systemImage: "figure.run")
-                                .font(.caption)
+                                .font(.footnote)
                                 .foregroundStyle(Theme.secondaryLabel)
                         }
                         if todayHealth.sleepHours > 0 {
                             Label(String(format: "%.1f h 睡眠", todayHealth.sleepHours), systemImage: "bed.double.fill")
-                                .font(.caption)
+                                .font(.footnote)
                                 .foregroundStyle(Theme.secondaryLabel)
                         }
                         Spacer()
@@ -679,16 +679,16 @@ struct TodayView: View {
     // MARK: - 提示
 
     private var navigationHintCard: some View {
-        Card(padding: 14) {
+        Card(padding: 12) {
             DisclosureGroup {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(NumberedLine.lines(from: IronRules.all)) { line in
-                        HStack(alignment: .top, spacing: 7) {
+                        HStack(alignment: .top, spacing: 8) {
                             Text("\(line.number).")
-                                .font(.caption2.weight(.bold))
+                                .font(.footnote.weight(.bold))
                                 .foregroundStyle(.orange)
                             Text(line.text)
-                                .font(.caption2)
+                                .font(.footnote)
                                 .foregroundStyle(Theme.secondaryLabel)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -697,7 +697,7 @@ struct TodayView: View {
                 .padding(.top, 8)
             } label: {
                 Label("三条铁律", systemImage: "exclamationmark.shield.fill")
-                    .font(.caption.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(.orange)
             }
         }
@@ -716,21 +716,21 @@ struct ReflectionSheet: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 12) {
                 Text("三行就够：今天卡在哪、明天先做什么、身体状态如何。")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(Theme.secondaryLabel)
 
                 TextEditor(text: $text)
                     .focused($focused)
                     .font(.body)
                     .scrollContentBackground(.hidden)
-                    .padding(10)
+                    .padding(12)
                     .background(Theme.tertiaryCard)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .frame(minHeight: 180)
                     .overlay(alignment: .topLeading) {
                         if text.isEmpty {
                             Text("例：极限 1^∞ 型还是慢；明天先做 30 道同类题再碰新章。")
-                                .font(.footnote)
+                                .font(.subheadline)
                                 .foregroundStyle(Theme.tertiaryLabel)
                                 .padding(.horizontal, 15)
                                 .padding(.vertical, 18)

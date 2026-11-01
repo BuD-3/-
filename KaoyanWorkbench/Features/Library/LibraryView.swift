@@ -98,11 +98,11 @@ struct LibraryView: View {
 
     private var summaryHeader: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("资料库")
                     .font(.headline)
                 Text(summaryLine)
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(Theme.secondaryLabel)
             }
             Spacer()
@@ -143,9 +143,9 @@ struct LibraryView: View {
     private func kindChip(_ kind: StudyMaterialKind) -> some View {
         HStack(spacing: 4) {
             Image(systemName: kind.symbolName)
-                .font(.caption2)
+                .font(.footnote)
             Text("\(count(of: kind))")
-                .font(.caption2.weight(.semibold))
+                .font(.footnote.weight(.semibold))
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
@@ -174,7 +174,7 @@ struct LibraryView: View {
             withAnimation(.easeOut(duration: 0.15)) { selectedSubject = subject }
         } label: {
             Text(label)
-                .font(.caption.weight(.medium))
+                .font(.footnote.weight(.medium))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(isOn ? color : Theme.card)
@@ -199,13 +199,13 @@ struct LibraryView: View {
     // MARK: - 行
 
     private func row(_ material: StudyMaterial) -> some View {
-        Card(padding: 14) {
+        Card(padding: 12) {
             HStack(spacing: 12) {
                 thumbnail(material)
                 rowText(material)
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(Theme.tertiaryLabel)
             }
         }
@@ -219,7 +219,7 @@ struct LibraryView: View {
                 .lineLimit(1)
 
             Text(material.summary)
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(Theme.tertiaryLabel)
                 .lineLimit(1)
 
@@ -230,13 +230,13 @@ struct LibraryView: View {
     }
 
     private func metaLine(_ material: StudyMaterial) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             if let subject = material.subject {
                 SubjectBadge(subject: subject, compact: true)
             }
             if let key = material.dateKey, let date = DateKey.date(from: key) {
                 Text(ClockFormatter.monthDay(date))
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(Theme.tertiaryLabel)
             }
             Spacer(minLength: 0)

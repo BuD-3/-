@@ -41,13 +41,13 @@ struct ProgressView: View {
 
     private var overviewCard: some View {
         Card {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("总体完成度")
                             .font(.headline)
                         Text("完成 \(store.progressItems.filter { $0.isDone }.count) / \(store.progressItems.count) 个进度项")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                     }
                     Spacer()
@@ -55,12 +55,12 @@ struct ProgressView: View {
                         RingProgress(value: store.overallProgress, tint: Theme.accent, lineWidth: 7)
                             .frame(width: 62, height: 62)
                         Text(ClockFormatter.percent(store.overallProgress))
-                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
                             .foregroundStyle(Theme.accent)
                     }
                 }
 
-                VStack(spacing: 9) {
+                VStack(spacing: 8) {
                     ForEach(Subject.allCases) { subject in
                         let stats = store.progressStats(for: subject)
                         HStack(spacing: 8) {
@@ -68,11 +68,11 @@ struct ProgressView: View {
                                 .fill(Theme.color(for: subject))
                                 .frame(width: 7, height: 7)
                             Text(subject.rawValue)
-                                .font(.caption.weight(.medium))
+                                .font(.footnote.weight(.medium))
                                 .frame(width: 46, alignment: .leading)
                             ProgressBar(value: stats.ratio, tint: Theme.color(for: subject), height: 6)
                             Text("\(stats.done)/\(stats.total)")
-                                .font(.caption2.monospacedDigit())
+                                .font(.footnote.monospacedDigit())
                                 .foregroundStyle(Theme.tertiaryLabel)
                                 .frame(width: 40, alignment: .trailing)
                         }
@@ -88,26 +88,26 @@ struct ProgressView: View {
         let focus = store.currentMonthFocus()
         let beforeStart = store.isBeforePlanStart
         return Card {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Label(beforeStart ? "启动月该推进" : "本月该推进", systemImage: beforeStart ? "flag.checkered" : "scope")
                         .font(.subheadline.weight(.semibold))
                     Spacer()
                     Text("\(focus.count) 项")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
 
                 if beforeStart {
                     Text("备考 2026-11-01 启动，下面是首月任务。现在可以先翻翻高数和数据结构第一章。")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
                 if focus.isEmpty {
                     Text(beforeStart ? "启动月任务已全部勾完。" : "本月计划项已全部勾完。")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                 } else {
                     ForEach(focus.prefix(6)) { item in
@@ -116,11 +116,11 @@ struct ProgressView: View {
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "circle")
-                                    .font(.caption)
+                                    .font(.footnote)
                                     .foregroundStyle(Theme.color(for: item.subject))
                                 SubjectBadge(subject: item.subject, compact: true)
                                 Text(item.title)
-                                    .font(.caption)
+                                    .font(.footnote)
                                     .foregroundStyle(Theme.label)
                                     .lineLimit(1)
                                 Spacer(minLength: 0)
@@ -131,7 +131,7 @@ struct ProgressView: View {
                     }
                     if focus.count > 6 {
                         Text("还有 \(focus.count - 6) 项…")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                 }
@@ -157,7 +157,7 @@ struct ProgressView: View {
                         }
                     }
                 } label: {
-                    HStack(spacing: 10) {
+                    HStack(spacing: 12) {
                         ZStack {
                             Circle()
                                 .fill(Theme.color(for: subject).opacity(0.13))
@@ -166,22 +166,22 @@ struct ProgressView: View {
                                 .font(.system(size: 11, weight: .bold))
                                 .foregroundStyle(Theme.color(for: subject))
                         }
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text(subject.rawValue)
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(Theme.label)
                             Text("\(stats.done)/\(stats.total) 完成 · \(ClockFormatter.percent(stats.ratio))")
-                                .font(.caption2)
+                                .font(.footnote)
                                 .foregroundStyle(Theme.secondaryLabel)
                         }
                         Spacer()
                         ProgressBar(value: stats.ratio, tint: Theme.color(for: subject), height: 5)
                             .frame(width: 60)
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.caption.weight(.semibold))
+                            .font(.footnote.weight(.semibold))
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
-                    .padding(14)
+                    .padding(12)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -189,9 +189,9 @@ struct ProgressView: View {
                 if isExpanded {
                     ForEach(groups) { group in
                         VStack(alignment: .leading, spacing: 0) {
-                            HStack(spacing: 6) {
+                            HStack(spacing: 8) {
                                 Text(group.module)
-                                    .font(.caption2.weight(.semibold))
+                                    .font(.footnote.weight(.semibold))
                                     .foregroundStyle(Theme.color(for: subject))
                                 Rectangle()
                                     .fill(Theme.color(for: subject).opacity(0.18))
@@ -213,25 +213,25 @@ struct ProgressView: View {
     }
 
     private func progressRow(_ item: ProgressItem, subject: Subject) -> some View {
-        HStack(alignment: .top, spacing: 6) {
+        HStack(alignment: .top, spacing: 8) {
             Button {
                 withAnimation(.easeOut(duration: 0.15)) {
                     store.toggleProgress(item)
                 }
             } label: {
-                HStack(alignment: .top, spacing: 9) {
+                HStack(alignment: .top, spacing: 8) {
                     Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")
                         .font(.system(size: 17))
                         .foregroundStyle(item.isDone ? Theme.color(for: subject) : Theme.tertiaryLabel)
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text(item.title)
-                            .font(.footnote)
+                            .font(.subheadline)
                             .foregroundStyle(item.isDone ? Theme.tertiaryLabel : Theme.label)
                             .strikethrough(item.isDone, color: Theme.tertiaryLabel)
                             .multilineTextAlignment(.leading)
                         Text(itemMood(item, planMonths: item.planMonths))
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                     Spacer(minLength: 0)
@@ -244,13 +244,13 @@ struct ProgressView: View {
             Button {
                 libraryTarget = item
             } label: {
-                HStack(spacing: 3) {
+                HStack(spacing: 4) {
                     Image(systemName: "paperclip")
                         .font(.system(size: 11))
                     let count = store.materialCount(forProgressItem: item.id)
                     if count > 0 {
                         Text("\(count)")
-                            .font(.system(size: 10, weight: .semibold))
+                            .font(.system(size: 11, weight: .semibold))
                     }
                 }
                 .foregroundStyle(store.materialCount(forProgressItem: item.id) > 0 ? Theme.accent : Theme.tertiaryLabel)
@@ -279,22 +279,22 @@ struct ProgressView: View {
     // MARK: - 重置
 
     private var resetCard: some View {
-        Card(padding: 14) {
-            HStack(spacing: 10) {
+        Card(padding: 12) {
+            HStack(spacing: 12) {
                 Image(systemName: "arrow.counterclockwise")
                     .foregroundStyle(Theme.secondaryLabel)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text("重置进度表")
-                        .font(.caption.weight(.semibold))
+                        .font(.footnote.weight(.semibold))
                     Text("把 \(store.progressItems.count) 个进度项恢复为「未开始」，不影响打卡和错题。")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                 }
                 Spacer()
                 Button("重置") {
                     store.resetProgressToSeed()
                 }
-                .font(.caption.weight(.semibold))
+                .font(.footnote.weight(.semibold))
                 .buttonStyle(.bordered)
             }
         }

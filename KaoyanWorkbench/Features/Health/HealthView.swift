@@ -41,13 +41,13 @@ struct HealthView: View {
 
     private var scoreCard: some View {
         Card {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("本周身体状态")
                             .font(.headline)
                         Text("运动 3 天 + 平均睡眠 7.5h 视为达标")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                     }
                     Spacer()
@@ -59,7 +59,7 @@ struct HealthView: View {
                         )
                         .frame(width: 62, height: 62)
                         Text(ClockFormatter.percent(store.healthScore))
-                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
                             .foregroundStyle(store.healthScore > 0.6 ? Color(red: 0.18, green: 0.68, blue: 0.42) : .orange)
                     }
                 }
@@ -98,16 +98,16 @@ struct HealthView: View {
                         draft = entry
                         editing = true
                     }
-                    .font(.caption.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                 }
 
                 if !entry.isLogged {
-                    HStack(spacing: 10) {
+                    HStack(spacing: 12) {
                         Image(systemName: "leaf.circle")
                             .font(.title3)
                             .foregroundStyle(Theme.tertiaryLabel)
                         Text("今天还没有记录健康数据。运动 20 分钟或散步一圈，都算。")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
@@ -143,7 +143,7 @@ struct HealthView: View {
                         }
                         if !entry.note.isEmpty {
                             Text(entry.note)
-                                .font(.caption2)
+                                .font(.footnote)
                                 .foregroundStyle(Theme.tertiaryLabel)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -153,11 +153,11 @@ struct HealthView: View {
                 // 示例：课表里的「晚餐 + 散步」
                 let dinnerBlock = DailySchedule.blocks(for: today).first { $0.id.hasSuffix("dinner") }
                 if let dinnerBlock {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 8) {
                         Image(systemName: "info.circle")
-                            .font(.caption2)
+                            .font(.footnote)
                         Text("课表 \(dinnerBlock.timeRangeText)「\(dinnerBlock.title)」— 把这段走完就是有效恢复。")
-                            .font(.caption2)
+                            .font(.footnote)
                     }
                     .foregroundStyle(Theme.tertiaryLabel)
                 }
@@ -166,16 +166,16 @@ struct HealthView: View {
     }
 
     private func healthRow(symbol: String, title: String, value: String, tint: Color) -> some View {
-        HStack(spacing: 9) {
+        HStack(spacing: 8) {
             Image(systemName: symbol)
                 .font(.system(size: 13))
                 .foregroundStyle(tint)
                 .frame(width: 20)
             Text(title)
-                .font(.footnote)
+                .font(.subheadline)
             Spacer()
             Text(value)
-                .font(.footnote.weight(.medium).monospacedDigit())
+                .font(.subheadline.weight(.medium).monospacedDigit())
                 .foregroundStyle(Theme.secondaryLabel)
         }
         .padding(.vertical, 3)
@@ -190,25 +190,25 @@ struct HealthView: View {
                     .font(.headline)
 
                 let days = weekDays()
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     ForEach(days) { day in
-                        VStack(spacing: 5) {
+                        VStack(spacing: 8) {
                             ZStack {
                                 Circle()
                                     .fill(circleColor(day.entry))
                                     .frame(width: 30, height: 30)
                                 if day.entry.didExercise {
                                     Image(systemName: "checkmark")
-                                        .font(.system(size: 12, weight: .bold))
+                                        .font(.system(size: 13, weight: .bold))
                                         .foregroundStyle(.white)
                                 } else {
                                     Text("\(day.dayNumber)")
-                                        .font(.caption2.monospacedDigit())
+                                        .font(.footnote.monospacedDigit())
                                         .foregroundStyle(day.isToday ? Theme.accent : Theme.tertiaryLabel)
                                 }
                             }
                             Text(day.shortLabel)
-                                .font(.system(size: 9))
+                                .font(.system(size: 11))
                                 .foregroundStyle(Theme.tertiaryLabel)
                         }
                         .frame(maxWidth: .infinity)
@@ -234,18 +234,18 @@ struct HealthView: View {
     // MARK: - 建议
 
     private var adviceCard: some View {
-        Card(padding: 14) {
+        Card(padding: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 Label("脱产期间的身体底线", systemImage: "heart.fill")
-                    .font(.caption.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(.red)
                 ForEach(NumberedLine.lines(from: healthRules)) { line in
-                    HStack(alignment: .top, spacing: 7) {
+                    HStack(alignment: .top, spacing: 8) {
                         Text("\(line.number).")
-                            .font(.caption2.weight(.bold))
+                            .font(.footnote.weight(.bold))
                             .foregroundStyle(.red)
                         Text(line.text)
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -267,31 +267,31 @@ struct HealthView: View {
     private var historyCard: some View {
         let entries = store.recentHealthEntries
         return Card {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("最近记录")
                     .font(.headline)
 
                 if entries.isEmpty {
                     Text("还没有历史记录。从今天开始，每天记一行就够。")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                 } else {
                     ForEach(entries) { item in
                         HStack(spacing: 8) {
                             Text(ClockFormatter.monthDay(item.date))
-                                .font(.caption2)
+                                .font(.footnote)
                                 .foregroundStyle(Theme.tertiaryLabel)
                                 .frame(width: 56, alignment: .leading)
                             if item.entry.didExercise {
                                 Label(ClockFormatter.minutesText(item.entry.exerciseMinutes),
                                       systemImage: "figure.run")
-                                    .font(.caption2)
+                                    .font(.footnote)
                                     .foregroundStyle(Color(red: 0.30, green: 0.65, blue: 0.42))
                             }
                             if item.entry.sleepHours > 0 {
                                 Label(String(format: "%.1f h", item.entry.sleepHours),
                                       systemImage: "bed.double.fill")
-                                    .font(.caption2)
+                                    .font(.footnote)
                                     .foregroundStyle(.purple)
                             }
                             Spacer()

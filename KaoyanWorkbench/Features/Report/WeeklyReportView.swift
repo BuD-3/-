@@ -43,18 +43,18 @@ struct WeeklyReportView: View {
                 shiftWeek(-7)
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.footnote.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
                     .frame(width: 32, height: 32)
                     .background(Theme.card)
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
 
-            VStack(spacing: 2) {
+            VStack(spacing: 4) {
                 Text(weekRangeText)
                     .font(.subheadline.weight(.semibold))
                 Text(isCurrentWeek ? "本周" : "历史")
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(Theme.tertiaryLabel)
             }
             .frame(maxWidth: .infinity)
@@ -63,7 +63,7 @@ struct WeeklyReportView: View {
                 shiftWeek(7)
             } label: {
                 Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
                     .frame(width: 32, height: 32)
                     .background(Theme.card)
                     .clipShape(Circle())
@@ -100,12 +100,12 @@ struct WeeklyReportView: View {
         ZStack {
             RingProgress(value: report.ratio, tint: ratioColor, lineWidth: 8)
                 .frame(width: 84, height: 84)
-            VStack(spacing: 1) {
+            VStack(spacing: 4) {
                 Text("\(Int((report.ratio * 100).rounded()))%")
-                    .font(.system(size: 19, weight: .bold, design: .rounded))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundStyle(ratioColor)
                 Text("完成率")
-                    .font(.system(size: 9))
+                    .font(.system(size: 11))
                     .foregroundStyle(Theme.tertiaryLabel)
             }
         }
@@ -118,16 +118,16 @@ struct WeeklyReportView: View {
     }
 
     private var summaryColumn: some View {
-        VStack(alignment: .leading, spacing: 7) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("本周专注")
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(Theme.secondaryLabel)
 
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(String(format: "%.1f", report.totalHours))
                     .font(.system(size: 26, weight: .bold, design: .rounded))
                 Text("/ \(String(format: "%.1f", report.plannedHours)) 小时")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(Theme.secondaryLabel)
             }
 
@@ -139,12 +139,12 @@ struct WeeklyReportView: View {
     private var comparisonRow: some View {
         if report.lastWeekHours <= 0 {
             // 上周没记录时，别显示「+45.8 小时」这种虚假涨幅
-            HStack(spacing: 5) {
+            HStack(spacing: 8) {
                 Image(systemName: "sparkles")
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(Theme.accent)
                 Text(report.totalHours > 0 ? "上周没有记录，这周就是起点" : "还没有开始记录")
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(Theme.secondaryLabel)
             }
         } else {
@@ -156,12 +156,12 @@ struct WeeklyReportView: View {
         let diff = report.comparedToLastWeek
         let sign = diff >= 0 ? "+" : "−"
         let text = String(format: "%@%.1f", sign, abs(diff))
-        return HStack(spacing: 5) {
+        return HStack(spacing: 8) {
             Image(systemName: diff >= 0 ? "arrow.up.right" : "arrow.down.right")
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(diff >= 0 ? Color(red: 0.18, green: 0.68, blue: 0.42) : .red)
             Text("比上周同期 \(text) 小时")
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(Theme.secondaryLabel)
         }
     }
@@ -184,7 +184,7 @@ struct WeeklyReportView: View {
                 .font(.headline)
             Spacer()
             Text("虚线 = 当天计划")
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(Theme.tertiaryLabel)
         }
     }
@@ -194,7 +194,7 @@ struct WeeklyReportView: View {
     }
 
     private var barsRow: some View {
-        HStack(alignment: .bottom, spacing: 6) {
+        HStack(alignment: .bottom, spacing: 8) {
             ForEach(report.days) { day in
                 barColumn(day)
             }
@@ -209,7 +209,7 @@ struct WeeklyReportView: View {
         let achieved = day.planned > 0 && day.hours >= day.planned * 0.9
         let color = achieved ? Color(red: 0.18, green: 0.68, blue: 0.42) : Theme.accent
 
-        return VStack(spacing: 5) {
+        return VStack(spacing: 8) {
             ZStack(alignment: .bottom) {
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
                     .fill(Theme.accent.opacity(0.08))
@@ -230,7 +230,7 @@ struct WeeklyReportView: View {
             .frame(height: height)
 
             Text(day.weekdayLabel)
-                .font(.system(size: 9))
+                .font(.system(size: 11))
                 .foregroundStyle(day.isToday ? Theme.accent : Theme.tertiaryLabel)
         }
         .frame(maxWidth: .infinity)
@@ -251,7 +251,7 @@ struct WeeklyReportView: View {
                 .fill(color)
                 .frame(width: 6, height: 6)
             Text(label)
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(Theme.tertiaryLabel)
         }
     }
@@ -266,7 +266,7 @@ struct WeeklyReportView: View {
 
                 if report.slices.isEmpty {
                     Text("本周还没有打勾记录，所以没有时间分布。")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                 } else {
                     ForEach(report.slices) { item in
@@ -280,21 +280,21 @@ struct WeeklyReportView: View {
     private func sliceRow(_ item: SliceTotal) -> some View {
         let ratio = report.totalHours > 0 ? item.hours / report.totalHours : 0
         let color = Theme.color(for: item.slice)
-        return VStack(spacing: 5) {
-            HStack(spacing: 7) {
+        return VStack(spacing: 8) {
+            HStack(spacing: 8) {
                 Image(systemName: item.slice.symbolName)
                     .font(.system(size: 11))
                     .foregroundStyle(color)
                     .frame(width: 16)
                 Text(item.slice.title)
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(Theme.label)
                 Spacer()
                 Text(String(format: "%.1f h", item.hours))
-                    .font(.caption.monospacedDigit().weight(.medium))
+                    .font(.footnote.monospacedDigit().weight(.medium))
                     .foregroundStyle(Theme.secondaryLabel)
                 Text("\(Int((ratio * 100).rounded()))%")
-                    .font(.caption2.monospacedDigit())
+                    .font(.footnote.monospacedDigit())
                     .foregroundStyle(Theme.tertiaryLabel)
                     .frame(width: 34, alignment: .trailing)
             }
@@ -322,15 +322,15 @@ struct WeeklyReportView: View {
     private func detailRow(_ title: String, _ value: String, _ symbol: String, _ tint: Color) -> some View {
         HStack(spacing: 8) {
             Image(systemName: symbol)
-                .font(.system(size: 12))
+                .font(.system(size: 13))
                 .foregroundStyle(tint)
                 .frame(width: 18)
             Text(title)
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(Theme.secondaryLabel)
             Spacer()
             Text(value)
-                .font(.caption.monospacedDigit().weight(.medium))
+                .font(.footnote.monospacedDigit().weight(.medium))
                 .foregroundStyle(Theme.label)
         }
     }
@@ -338,13 +338,13 @@ struct WeeklyReportView: View {
     // MARK: - 评语
 
     private var verdictCard: some View {
-        Card(padding: 14) {
-            VStack(alignment: .leading, spacing: 7) {
+        Card(padding: 12) {
+            VStack(alignment: .leading, spacing: 8) {
                 Label("这周怎么样", systemImage: "text.bubble.fill")
-                    .font(.caption.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(ratioColor)
                 Text(report.verdict)
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(Theme.secondaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
             }

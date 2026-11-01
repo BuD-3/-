@@ -48,11 +48,11 @@ struct BudgetView: View {
         let status = store.budgetStatus
         let tint = Theme.color(for: status)
         return Card {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("剩余弹药")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                         Text(ClockFormatter.currency(store.remainingFunds))
                             .font(.system(size: 30, weight: .bold, design: .rounded))
@@ -60,15 +60,15 @@ struct BudgetView: View {
                             .minimumScaleFactor(0.6)
                             .lineLimit(1)
                         Text("总弹药 \(ClockFormatter.currency(BudgetPlan.totalFunds))")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                     Spacer()
                     HStack(spacing: 4) {
                         Image(systemName: status.symbolName)
-                            .font(.caption)
+                            .font(.footnote)
                         Text(status.title)
-                            .font(.caption.weight(.semibold))
+                            .font(.footnote.weight(.semibold))
                     }
                     .padding(.horizontal, 9)
                     .padding(.vertical, 5)
@@ -77,15 +77,15 @@ struct BudgetView: View {
                     .clipShape(Capsule())
                 }
 
-                VStack(spacing: 6) {
+                VStack(spacing: 8) {
                     ProgressBar(value: store.spentRatio, tint: tint, height: 10)
                     HStack {
                         Text("已花 \(ClockFormatter.currency(store.totalSpent))")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                         Spacer()
                         Text("计划线 \(ClockFormatter.currency(BudgetPlan.plannedSpend))")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                 }
@@ -124,22 +124,22 @@ struct BudgetView: View {
                 ForEach(BudgetCategory.allCases) { category in
                     let spent = store.spent(for: category)
                     if spent > 0 || category.planAmount != nil {
-                        HStack(spacing: 9) {
+                        HStack(spacing: 8) {
                             Image(systemName: category.symbolName)
-                                .font(.system(size: 12))
+                                .font(.system(size: 13))
                                 .foregroundStyle(Theme.secondaryLabel)
                                 .frame(width: 18)
                             Text(category.rawValue)
-                                .font(.caption)
+                                .font(.footnote)
                                 .foregroundStyle(Theme.label)
                             Spacer()
                             if let plan = category.planAmount, plan > 0 {
                                 Text(ClockFormatter.currency(spent) + " / " + ClockFormatter.currency(Double(plan)))
-                                    .font(.caption2.monospacedDigit())
+                                    .font(.footnote.monospacedDigit())
                                     .foregroundStyle(spent > Double(plan) ? .red : Theme.tertiaryLabel)
                             } else {
                                 Text(ClockFormatter.currency(spent))
-                                    .font(.caption2.monospacedDigit())
+                                    .font(.footnote.monospacedDigit())
                                     .foregroundStyle(Theme.secondaryLabel)
                             }
                         }
@@ -155,40 +155,40 @@ struct BudgetView: View {
     private var recentCard: some View {
         let recent = store.budgetEntries.sorted { $0.date > $1.date }.prefix(8)
         return Card {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Text("最近流水")
                         .font(.headline)
                     Spacer()
                     if !store.budgetEntries.isEmpty {
                         Text("共 \(store.budgetEntries.count) 笔")
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                 }
 
                 if recent.isEmpty {
                     Text("还没有记支出。记一笔试试。")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                 } else {
                     ForEach(Array(recent)) { entry in
-                        HStack(spacing: 9) {
+                        HStack(spacing: 8) {
                             Image(systemName: entry.category.symbolName)
                                 .font(.system(size: 11))
                                 .foregroundStyle(Theme.secondaryLabel)
                                 .frame(width: 18)
-                            VStack(alignment: .leading, spacing: 1) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(entry.note.isEmpty ? entry.category.rawValue : entry.note)
-                                    .font(.caption)
+                                    .font(.footnote)
                                     .lineLimit(1)
                                 Text(ClockFormatter.monthDay(entry.date))
-                                    .font(.caption2)
+                                    .font(.footnote)
                                     .foregroundStyle(Theme.tertiaryLabel)
                             }
                             Spacer()
                             Text("- " + ClockFormatter.currency(entry.amount))
-                                .font(.caption.weight(.medium).monospacedDigit())
+                                .font(.footnote.weight(.medium).monospacedDigit())
                                 .foregroundStyle(Theme.secondaryLabel)
                         }
                         .padding(.vertical, 3)
@@ -210,25 +210,25 @@ struct BudgetView: View {
 
     private var materialCard: some View {
         Card {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Text("资料清单（省钱版）")
                         .font(.headline)
                     Spacer()
                     Text("预算 \(ClockFormatter.currency(790))")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
 
                 Text("B 站免费课足够，不报任何付费班。二手能省一半。")
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(Theme.secondaryLabel)
 
                 ForEach(BudgetPlan.materialChecklist.indices, id: \.self) { index in
                     let item = BudgetPlan.materialChecklist[index]
                     HStack(spacing: 8) {
                         Text(item.subject)
-                            .font(.system(size: 9, weight: .semibold))
+                            .font(.system(size: 11, weight: .semibold))
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)
                             .background(Theme.tertiaryCard)
@@ -236,24 +236,24 @@ struct BudgetView: View {
                             .clipShape(Capsule())
                             .frame(width: 38)
                         Text(item.name)
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(Theme.label)
                             .lineLimit(1)
                         Spacer()
                         Text("\(item.budget) 元")
-                            .font(.caption2.monospacedDigit())
+                            .font(.footnote.monospacedDigit())
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                     .padding(.vertical, 1)
                 }
 
                 Divider()
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(.orange)
                     Text("2 万元是全部弹药。开始前就和家人明确「吃住归家里、2 万只用于学习和应急」。")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
                 }
