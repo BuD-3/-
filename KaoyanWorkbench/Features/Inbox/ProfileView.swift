@@ -1,4 +1,4 @@
-//
+﻿//
 //  ProfileView.swift
 //  KaoyanWorkbench
 //
@@ -7,15 +7,28 @@
 
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 struct ProfileView: View {
     @EnvironmentObject private var store: AppStore
     @State private var showingTodoEditor = false
-    @State private var showingClearConfirm = false
-    @State private var showingExport = false
-    @State private var exportedText = ""
     @State private var permission: ReminderPermission = .unknown
     @State private var pendingCount = 0
+
+    // 备份 / 恢复
+    @State private var backupDocument: BackupDocument?
+    @State private var showingExporter = false
+    @State private var showingImporter = false
+    @State private var isPreparingBackup = false
+    @State private var pendingRestore: BackupArchive?
+    @State private var activeAlert: ProfileAlert?
+
+    /// 同一时间只弹一个 alert，避免多个 alert 修饰符互相覆盖
+    enum ProfileAlert {
+        case clearAll
+        case restoreConfirm(BackupArchive)
+        case message(String)
+    }
 
     var body: some View {
         NavigationStack {
@@ -43,23 +56,152 @@ struct ProfileView: View {
                     store.addTodo(todo)
                 }
             }
-            .alert("清空所有数据？", isPresented: $showingClearConfirm) {
-                Button("取消", role: .cancel) {}
-                Button("清空", role: .destructive) {
-                    store.clearAllData()
-                }
+            .alert(alertTitle, isPresented: alertBinding) {
+                alertActions
             } message: {
-                Text("打卡、错题、预算、待办都会被清空，进度表恢复初始状态。此操作不可撤销。")
+                Text(alertMessage)
             }
-            .sheet(isPresented: $showingExport) {
-                ExportSheet(text: exportedText)
+            .fileExporter(
+                isPresented: $showingExporter,
+                document: backupDocument,
+                contentType: .json,
+                defaultFilename: BackupService.suggestedFileName()
+            ) { result in
+                switch result {
+                case .success:
+                    store.markBackedUpNow()
+                    activeAlert = .message("备份已保存到「文件」App。建议再复制一份到网盘。")
+                case .failure(let error):
+                    activeAlert = .message("导出失败：\(error.localizedDescription)")
+                }
+                backupDocument = nil
             }
+            .fileImporter(
+                isPresented: $showingImporter,
+                allowedContentTypes: [.json, .data],
+                allowsMultipleSelection: false
+            ) { result in
+                handleImport(result)
+            }
+        }
+    }
+
+    // MARK: - Alert
+
+    private enum AlertInfo {
+        case clear
+        case restore
+        case message
+    }
+
+    private var alertInfo: AlertInfo {
+        switch activeAlert {
+        case .clearAll: return .clear
+        case .restoreConfirm: return .restore
+        default: return .message
+        }
+    }
+
+    private var alertBinding: Binding<Bool> {
+        Binding(
+            get: { activeAlert != nil },
+            set: { if !$0 { activeAlert = nil } }
+        )
+    }
+
+    private var alertTitle: String {
+        switch alertInfo {
+        case .clear: return "清空所有数据？"
+        case .restore: return "用备份覆盖当前数据？"
+        case .message: return "提示"
+        }
+    }
+
+    private var alertMessage: String {
+        switch activeAlert {
+        case .clearAll:
+            return "打卡、错题、进度、预算、资料库都会被清空，此操作不可撤销。建议先导出一份备份。"
+        case .restoreConfirm(let archive):
+            return "备份时间：\(ClockFormatter.fullDate(archive.createdAt))\n\(archive.summaryText)\n\n本机现有数据会被完全替换。"
+        case .message(let text):
+            return text
+        case .none:
+            return ""
+        }
+    }
+
+    @ViewBuilder
+    private var alertActions: some View {
+        switch alertInfo {
+        case .clear:
+            Button("取消", role: .cancel) { activeAlert = nil }
+            Button("清空", role: .destructive) {
+                store.clearAllData()
+                activeAlert = .message("已清空。")
+            }
+        case .restore:
+            Button("取消", role: .cancel) { activeAlert = nil }
+            Button("覆盖恢复", role: .destructive) { applyRestore() }
+        case .message:
+            Button("好", role: .cancel) { activeAlert = nil }
         }
     }
 
     private func refreshReminderState() async {
         permission = await store.reminderPermission()
         pendingCount = await store.pendingReminderCount()
+    }
+
+    // MARK: - 备份 / 恢复动作
+
+    private func prepareExport() {
+        isPreparingBackup = true
+        // 把编码放到下一个 runloop，避免大附件时界面卡住
+        DispatchQueue.main.async {
+            let archive = store.makeBackupArchive()
+            defer { isPreparingBackup = false }
+            do {
+                let data = try BackupService.encode(archive)
+                backupDocument = BackupDocument(data: data)
+                showingExporter = true
+            } catch {
+                activeAlert = .message("打包备份失败：\(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func handleImport(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first else { return }
+            let accessed = url.startAccessingSecurityScopedResource()
+            defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+            do {
+                let data = try Data(contentsOf: url)
+                let archive = try BackupService.decode(data)
+                pendingRestore = archive
+                activeAlert = .restoreConfirm(archive)
+            } catch {
+                activeAlert = .message("这个文件读不出来：\(error.localizedDescription)")
+            }
+        case .failure(let error):
+            activeAlert = .message("选择文件失败：\(error.localizedDescription)")
+        }
+    }
+
+    private func applyRestore() {
+        guard let archive = pendingRestore else {
+            activeAlert = nil
+            return
+        }
+        do {
+            try store.restore(from: archive)
+            pendingRestore = nil
+            activeAlert = .message("已恢复：\(archive.summaryText)")
+        } catch {
+            pendingRestore = nil
+            activeAlert = .message("恢复失败：\(error.localizedDescription)")
+        }
     }
 
     // MARK: - 头部
@@ -422,18 +564,34 @@ struct ProfileView: View {
                 Text("数据")
                     .font(.headline)
 
+                backupStatusLine
+
                 Button {
-                    if let data = Persistence.shared.exportAll(),
-                       let text = String(data: data, encoding: .utf8) {
-                        exportedText = text
-                        showingExport = true
-                    } else {
-                        exportedText = "暂无数据可导出。"
-                        showingExport = true
-                    }
+                    prepareExport()
                 } label: {
                     HStack {
-                        Label("导出备份（JSON）", systemImage: "square.and.arrow.up")
+                        Label("导出完整备份", systemImage: "square.and.arrow.up")
+                            .font(.footnote)
+                        Spacer()
+                        if isPreparingBackup {
+                            ProgressView().scaleEffect(0.7)
+                        } else {
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                                .foregroundStyle(Theme.tertiaryLabel)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(isPreparingBackup)
+
+                Divider()
+
+                Button {
+                    showingImporter = true
+                } label: {
+                    HStack {
+                        Label("从备份恢复", systemImage: "square.and.arrow.down")
                             .font(.footnote)
                         Spacer()
                         Image(systemName: "chevron.right")
@@ -446,7 +604,7 @@ struct ProfileView: View {
                 Divider()
 
                 Button {
-                    showingClearConfirm = true
+                    activeAlert = .clearAll
                 } label: {
                     HStack {
                         Label("清空所有数据", systemImage: "trash")
@@ -466,12 +624,35 @@ struct ProfileView: View {
                     Image(systemName: "internaldrive")
                         .font(.caption2)
                         .foregroundStyle(Theme.tertiaryLabel)
-                    Text("数据只存在本机 Documents 目录，随 iCloud 备份。")
+                    Text("备份是一个 .json 文件，含所有打卡、错题、进度、预算和资料库附件，可存到「文件」App 或网盘。")
                         .font(.caption2)
                         .foregroundStyle(Theme.tertiaryLabel)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
+    }
+
+    private var backupStatusLine: some View {
+        HStack(spacing: 6) {
+            Image(systemName: store.settings.lastBackupAt == nil ? "exclamationmark.circle" : "checkmark.circle.fill")
+                .font(.caption)
+                .foregroundStyle(store.settings.lastBackupAt == nil ? .orange : Color(red: 0.18, green: 0.68, blue: 0.42))
+            Text(backupStatusText)
+                .font(.caption2)
+                .foregroundStyle(Theme.secondaryLabel)
+            Spacer()
+        }
+    }
+
+    private var backupStatusText: String {
+        if let last = store.settings.lastBackupAt {
+            let days = CalendarHelper.daysBetween(last, Date())
+            let when = ClockFormatter.monthDay(last)
+            if days <= 0 { return "上次备份：今天" }
+            return "上次备份：\(when)（\(days) 天前）"
+        }
+        return "还没有备份过。免费签名 7 天要重签，建议先备份一次。"
     }
 
     // MARK: - 关于
@@ -538,38 +719,6 @@ struct TodoEditorView: View {
                     }
                     .fontWeight(.semibold)
                     .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - 导出
-
-struct ExportSheet: View {
-    let text: String
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                Text(text)
-                    .font(.system(size: 10, design: .monospaced))
-                    .textSelection(.enabled)
-                    .padding(12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .background(Theme.background)
-            .navigationTitle("备份内容")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") { dismiss() }
-                }
-                ToolbarItem(placement: .cancellationAction) {
-                    ShareLink(item: text) {
-                        Image(systemName: "square.and.arrow.up")
-                    }
                 }
             }
         }

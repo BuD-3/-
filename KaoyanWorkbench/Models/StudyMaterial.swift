@@ -148,6 +148,13 @@ enum MaterialStorage {
         return (name, size)
     }
 
+    /// 直接按指定文件名写回（恢复备份时用，必须保留原文件名，
+    /// 否则 StudyMaterial.fileName 会对不上）
+    static func write(data: Data, fileName: String) throws {
+        let dest = url(for: fileName)
+        try data.write(to: dest, options: [.atomic])
+    }
+
     static func delete(fileName: String) {
         try? FileManager.default.removeItem(at: url(for: fileName))
     }

@@ -663,6 +663,72 @@ final class AppStore: ObservableObject {
         await NotificationManager.shared.pendingReviewCount()
     }
 
+    // MARK: - 备份与恢复
+
+    /// 打包当前全部数据 + 附件二进制
+    func makeBackupArchive() -> BackupArchive {
+        var archive = BackupArchive()
+        archive.createdAt = Date()
+        archive.checkIns = checkIns
+        archive.mistakes = mistakes
+        archive.progressItems = progressItems
+        archive.budgetEntries = budgetEntries
+        archive.todos = todos
+        archive.materials = materials
+        archive.settings = settings
+
+        for material in materials {
+            guard let fileName = material.fileName else { continue }
+            let fileURL = MaterialStorage.url(for: fileName)
+            if let data = try? Data(contentsOf: fileURL) {
+                archive.attachments[fileName] = data
+            }
+        }
+        return archive
+    }
+
+    /// 是否有值得备份的内容
+    var hasBackupableData: Bool {
+        !checkIns.isEmpty || !mistakes.isEmpty || !budgetEntries.isEmpty
+            || !todos.isEmpty || !materials.isEmpty
+    }
+
+    /// 用备份整体覆盖本机数据（调用方负责先确认）
+    func restore(from archive: BackupArchive) throws {
+        guard archive.version <= BackupArchive.currentVersion else {
+            throw BackupError.unsupportedVersion(archive.version)
+        }
+
+        // 1. 先把附件文件落地
+        for (fileName, data) in archive.attachments {
+            try MaterialStorage.write(data: data, fileName: fileName)
+        }
+
+        // 2. 清掉备份里没有的本机附件，避免留垃圾
+        let keep = Set(archive.attachments.keys)
+        for material in materials {
+            if let fileName = material.fileName, !keep.contains(fileName) {
+                MaterialStorage.delete(fileName: fileName)
+            }
+        }
+
+        // 3. 覆盖业务数据
+        checkIns = archive.checkIns
+        mistakes = archive.mistakes
+        progressItems = archive.progressItems.isEmpty ? SeedData.progressItems() : archive.progressItems
+        budgetEntries = archive.budgetEntries
+        todos = archive.todos
+        materials = archive.materials
+        settings = archive.settings
+
+        // 4. 重建通知排程
+        refreshReminders()
+    }
+
+    func markBackedUpNow() {
+        settings.lastBackupAt = Date()
+    }
+
     // MARK: - 数据管理
 
     func resetProgressToSeed() {
@@ -685,6 +751,17 @@ final class AppStore: ObservableObject {
     }
 }
 
+enum BackupError: LocalizedError {
+    case unsupportedVersion(Int)
+
+    var errorDescription: String? {
+        switch self {
+        case .unsupportedVersion(let v):
+            return "这个备份来自更新的版本（v\(v)），当前 App 读不了。请先更新 App。"
+        }
+    }
+}
+
 // MARK: - 设置
 
 struct AppSettings: Codable {
@@ -696,6 +773,8 @@ struct AppSettings: Codable {
     var remindersEnabled: Bool = false
     /// 提醒时间（小时，0...23）
     var reminderHour: Int = 9
+    /// 上次完整备份时间
+    var lastBackupAt: Date?
 
     init() {}
 
@@ -707,6 +786,7 @@ struct AppSettings: Codable {
         examDateOverride = try c.decodeIfPresent(Date.self, forKey: .examDateOverride)
         remindersEnabled = try c.decodeIfPresent(Bool.self, forKey: .remindersEnabled) ?? false
         reminderHour = try c.decodeIfPresent(Int.self, forKey: .reminderHour) ?? 9
+        lastBackupAt = try c.decodeIfPresent(Date.self, forKey: .lastBackupAt)
     }
 }
 
