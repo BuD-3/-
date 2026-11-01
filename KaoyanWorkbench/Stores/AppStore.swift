@@ -456,6 +456,25 @@ final class AppStore: ObservableObject {
         }.sorted { $0.createdAt > $1.createdAt }
     }
 
+    /// 待回炉①：当天录入还没做当日回炉
+    var freshCount: Int {
+        mistakes.reduce(0) { $0 + ($1.status == .fresh ? 1 : 0) }
+    }
+
+    /// 待回炉②：已过当日回炉，等第 7 天
+    var pendingWeekCount: Int {
+        mistakes.reduce(0) { $0 + ($1.status == .pendingDay ? 1 : 0) }
+    }
+
+    /// 今天已完成回炉②
+    var completedTodayCount: Int {
+        let today = CalendarHelper.startOfDay(Date())
+        return mistakes.reduce(0) { sum, item in
+            guard let done = item.weekReviewedAt else { return sum }
+            return sum + (CalendarHelper.startOfDay(done) == today ? 1 : 0)
+        }
+    }
+
     var dueWeekReviews: [Mistake] {
         mistakes.filter { $0.isWeekReviewDue() }
     }

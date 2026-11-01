@@ -51,14 +51,60 @@ struct LibraryView: View {
             if materials.isEmpty {
                 emptyCard
             } else {
-                ForEach(materials) { material in
+                materialList
+            }
+        }
+    }
+
+    /// 单容器 + 分隔线：比「每行一张卡」省掉一半以上的垂直空间
+    private var materialList: some View {
+        Card(padding: 0) {
+            VStack(spacing: 0) {
+                ForEach(materials.indices, id: \.self) { index in
+                    let material = materials[index]
                     NavigationLink(destination: MaterialDetailView(materialID: material.id)) {
-                        row(material)
+                        compactRow(material)
                     }
                     .buttonStyle(.plain)
+
+                    if index < materials.count - 1 {
+                        Divider()
+                            .padding(.leading, 52)
+                    }
                 }
             }
         }
+    }
+
+    private func compactRow(_ material: StudyMaterial) -> some View {
+        HStack(spacing: 10) {
+            thumbnail(material)
+                .scaleEffect(0.82)
+                .frame(width: 36, height: 36)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(material.title)
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.label)
+                    .lineLimit(1)
+                Text(material.summary)
+                    .font(.footnote)
+                    .foregroundStyle(Theme.tertiaryLabel)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 0)
+
+            if let subject = material.subject {
+                SubjectBadge(subject: subject, compact: true)
+            }
+            Image(systemName: "chevron.right")
+                .font(.system(size: 11))
+                .foregroundStyle(Theme.tertiaryLabel)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .contentShape(Rectangle())
     }
 
     @ToolbarContentBuilder

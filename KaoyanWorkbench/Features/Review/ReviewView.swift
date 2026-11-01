@@ -90,15 +90,19 @@ struct ReviewView: View {
                         .foregroundStyle(dueQueue.isEmpty ? Theme.secondaryLabel : .orange)
                 }
 
-                HStack(spacing: 8) {
-                    StatTile(title: "待回炉①",
-                             value: "\(store.mistakes.filter { $0.status == .fresh }.count)",
+                HStack(spacing: 6) {
+                    StatTile(title: "待回①",
+                             value: "\(store.freshCount)",
                              tint: .orange,
                              symbol: "clock.arrow.circlepath")
-                    StatTile(title: "待回炉②",
-                             value: "\(store.mistakes.filter { $0.status == .pendingDay }.count)",
+                    StatTile(title: "待回②",
+                             value: "\(store.pendingWeekCount)",
                              tint: .red,
                              symbol: "calendar.badge.clock")
+                    StatTile(title: "今日完成",
+                             value: "\(store.completedTodayCount)",
+                             tint: .blue,
+                             symbol: "checkmark.circle.fill")
                     StatTile(title: "已掌握",
                              value: "\(store.mistakes.filter { $0.status == .mastered }.count)",
                              tint: Color(red: 0.18, green: 0.68, blue: 0.42),
