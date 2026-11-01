@@ -93,17 +93,14 @@ struct ReviewView: View {
                 HStack(spacing: 8) {
                     StatTile(title: "等待回炉①",
                              value: "\(store.mistakes.filter { $0.status == .fresh }.count)",
-                             caption: "当天录的",
                              tint: .orange,
                              symbol: "clock.arrow.circlepath")
                     StatTile(title: "等待回炉②",
                              value: "\(store.mistakes.filter { $0.status == .pendingDay }.count)",
-                             caption: "+7 天到期",
                              tint: .red,
                              symbol: "calendar.badge.clock")
                     StatTile(title: "已掌握",
                              value: "\(store.mistakes.filter { $0.status == .mastered }.count)",
-                             caption: "两次都过",
                              tint: Color(red: 0.18, green: 0.68, blue: 0.42),
                              symbol: "checkmark.seal.fill")
                 }

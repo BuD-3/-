@@ -268,12 +268,12 @@ struct ProgressView: View {
 
     /// 计划月份的提示文字：已过期待补 / 本月 / 未来
     private func itemMood(_ item: ProgressItem, planMonths: String) -> String {
-        guard let first = item.planMonthList.first else { return "计划 \(planMonths)" }
+        guard let first = item.planMonthList.first else { return planMonths }
         let current = CalendarHelper.monthKey(Date())
         if item.isDone { return "已完成" }
-        if first < current { return "计划 \(planMonths) · 已过期" }
-        if item.planMonthList.contains(current) { return "计划 \(planMonths) · 本月" }
-        return "计划 \(planMonths)"
+        if first < current { return "\(planMonths) · 已过期" }
+        if item.planMonthList.contains(current) { return "\(planMonths) · 本月" }
+        return planMonths
     }
 
     // MARK: - 重置

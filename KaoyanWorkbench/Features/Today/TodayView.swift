@@ -159,23 +159,6 @@ struct TodayView: View {
                 )
             }
 
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text("全程进度")
-                        .font(.caption)
-                        .foregroundStyle(Theme.secondaryLabel)
-                    Spacer()
-                    Text("\(ClockFormatter.percent(Double(daysElapsed) / Double(max(1, PlanTimeline.totalDays))))")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Theme.secondaryLabel)
-                }
-                ProgressBar(
-                    value: Double(daysElapsed) / Double(max(1, PlanTimeline.totalDays)),
-                    tint: Theme.accent,
-                    height: 6
-                )
-            }
-
             if let next = MilestoneData.next(after: today) {
                 HStack(spacing: 8) {
                     Image(systemName: "flag.fill")
@@ -244,10 +227,6 @@ struct TodayView: View {
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
 
-                Text(stage.tagline)
-                    .font(.footnote)
-                    .foregroundStyle(Theme.secondaryLabel)
-
                 Divider()
 
                 if let month {
@@ -281,7 +260,7 @@ struct TodayView: View {
             Text(text)
                 .font(.footnote)
                 .foregroundStyle(Theme.label)
-                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(2)
             Spacer(minLength: 0)
         }
     }
@@ -425,10 +404,6 @@ struct TodayView: View {
                             .foregroundStyle(isDone ? Theme.tertiaryLabel : Theme.label)
                             .strikethrough(isDone, color: Theme.tertiaryLabel)
                             .multilineTextAlignment(.leading)
-                        Text(block.detail)
-                            .font(.caption2)
-                            .foregroundStyle(Theme.tertiaryLabel)
-                            .multilineTextAlignment(.leading)
                     }
                     Spacer(minLength: 0)
                 }
@@ -483,9 +458,6 @@ struct TodayView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("今天学过什么")
                     .font(.headline)
-                Text("拍张笔记、传个 PDF，或者写几句小结")
-                    .font(.caption)
-                    .foregroundStyle(Theme.secondaryLabel)
             }
             Spacer()
             Button {
@@ -664,21 +636,25 @@ struct TodayView: View {
 
     private var navigationHintCard: some View {
         Card(padding: 14) {
-            VStack(alignment: .leading, spacing: 8) {
+            DisclosureGroup {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(NumberedLine.lines(from: IronRules.all)) { line in
+                        HStack(alignment: .top, spacing: 7) {
+                            Text("\(line.number).")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(.orange)
+                            Text(line.text)
+                                .font(.caption2)
+                                .foregroundStyle(Theme.secondaryLabel)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                .padding(.top, 8)
+            } label: {
                 Label("三条铁律", systemImage: "exclamationmark.shield.fill")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.orange)
-                ForEach(NumberedLine.lines(from: IronRules.all)) { line in
-                    HStack(alignment: .top, spacing: 7) {
-                        Text("\(line.number).")
-                            .font(.caption2.weight(.bold))
-                            .foregroundStyle(.orange)
-                        Text(line.text)
-                            .font(.caption2)
-                            .foregroundStyle(Theme.secondaryLabel)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
             }
         }
     }

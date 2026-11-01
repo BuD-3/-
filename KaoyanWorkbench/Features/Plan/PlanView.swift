@@ -163,7 +163,7 @@ struct PlanView: View {
             Text(text)
                 .font(.caption)
                 .foregroundStyle(Theme.label)
-                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(3)
             Spacer(minLength: 0)
         }
     }

@@ -387,7 +387,6 @@ struct ProfileView: View {
                 if store.settings.remindersEnabled {
                     reminderTimePicker
                 }
-                reminderFooter
             }
         }
     }
@@ -399,9 +398,6 @@ struct ProfileView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("错题回炉提醒")
                     .font(.headline)
-                Text("到第 7 天时通知你回炉，不用主动想起来")
-                    .font(.caption)
-                    .foregroundStyle(Theme.secondaryLabel)
             }
             Spacer()
         }
@@ -467,13 +463,6 @@ struct ProfileView: View {
                 }
             }
         }
-    }
-
-    private var reminderFooter: some View {
-        Text("完成回炉①后，系统会在第 7 天按上面的时间提醒你。完成回炉②或删除错题，提醒自动取消。")
-            .font(.caption2)
-            .foregroundStyle(Theme.tertiaryLabel)
-            .fixedSize(horizontal: false, vertical: true)
     }
 
     // MARK: - 待办
@@ -656,17 +645,6 @@ struct ProfileView: View {
                 }
                 .buttonStyle(.plain)
 
-                Divider()
-
-                HStack(spacing: 6) {
-                    Image(systemName: "internaldrive")
-                        .font(.caption2)
-                        .foregroundStyle(Theme.tertiaryLabel)
-                    Text("备份是一个 .json 文件，含所有打卡、错题、进度、预算和资料库附件，可存到「文件」App 或网盘。")
-                        .font(.caption2)
-                        .foregroundStyle(Theme.tertiaryLabel)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
             }
         }
     }
@@ -700,10 +678,9 @@ struct ProfileView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("关于这套计划")
                     .font(.caption.weight(.semibold))
-                Text("数据来源：2028考研_河南大学人工智能_脱产14个月作战计划.xlsx。倒计时与阶段按 2026-11-01 启动、2027-12-18 初试计算，若官方公告有变，请以后者为准。")
+                Text("数据源：2028 考研作战计划.xlsx · 按 2026-11-01 启动、2027-12-18 初试计算")
                     .font(.caption2)
                     .foregroundStyle(Theme.tertiaryLabel)
-                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
