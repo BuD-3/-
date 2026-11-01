@@ -197,11 +197,11 @@ jobs:
           xcrun simctl io "$DEVICE" screenshot "screenshots/07-today-materials.png"
 
           echo "--- 截取 09-report (学习周报) ---"
-          xcrun simctl terminate "" "" 2>/dev/null || true
+          xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
           sleep 1
-          xcrun simctl launch "" "" --report-preview --seed-demo
+          xcrun simctl launch "$DEVICE" "$BUNDLE" --report-preview --seed-demo
           sleep 6
-          xcrun simctl io "" screenshot "screenshots/09-report.png"
+          xcrun simctl io "$DEVICE" screenshot "screenshots/09-report.png"
 
           echo "--- 截取 08-home (桌面图标) ---"
           xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
