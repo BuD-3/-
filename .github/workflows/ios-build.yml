@@ -1,13 +1,26 @@
-﻿name: iOS Build
+name: iOS Build
 
-# 云端 Mac 编译 + 真机模拟器截图。
-# 不需要本地有 Mac 就能验证工程能否编译、界面长什么样。
+# 云端 Mac 编译 + 模拟器截图 + 未签名 IPA。
+#
+# 省额度策略（macOS 机器按 10 倍计费）：
+#   - 每次 push：只跑「编译」≈ 2.3 分钟 → 23 计费分钟
+#   - 截图 / IPA 只在手动触发时跑 → 按需消耗
+# 免费额度 2000 分钟/月，这样够跑约 86 轮，而不是 20 轮。
 
 on:
   push:
     branches: [ main, master ]
   pull_request:
   workflow_dispatch:
+    inputs:
+      screenshots:
+        description: "同时生成 8 张模拟器截图"
+        type: boolean
+        default: true
+      ipa:
+        description: "同时打包未签名 IPA（用于 Sideloadly 装机）"
+        type: boolean
+        default: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -91,6 +104,8 @@ jobs:
 
   screenshots:
     name: Simulator Screenshots
+    # 只在手动触发且勾选了「截图」时跑，避免每次 push 都吃掉 66 计费分钟
+    if: github.event_name == 'workflow_dispatch' && inputs.screenshots == true
     runs-on: macos-15
     needs: build
     timeout-minutes: 30
@@ -198,6 +213,8 @@ jobs:
 
   ipa:
     name: Unsigned IPA (for Sideloadly)
+    # 只在手动触发且勾选了「IPA」时跑
+    if: github.event_name == 'workflow_dispatch' && inputs.ipa == true
     runs-on: macos-15
     needs: build
     timeout-minutes: 25
