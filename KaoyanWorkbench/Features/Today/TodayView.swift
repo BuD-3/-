@@ -53,6 +53,11 @@ struct TodayView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                 }
+                .onDisappear {
+                    // 离开今日页时把两张卡收回正面，回来时先看概览
+                    stageCardFlipped = false
+                    timetableFlipped = false
+                }
                 .onAppear {
                     // 仅自动化截图用：直接把「今天学过什么」滚到可见位置
                     guard ProcessInfo.processInfo.arguments.contains("--focus-materials") else { return }
@@ -199,7 +204,7 @@ struct TodayView: View {
     private func actionCards(proxy: ScrollViewProxy) -> some View {
         HStack(spacing: 8) {
             ActionCard(
-                title: "今日课表",
+                title: "今日事项",
                 value: "\(completedBlockCount)/\(blocks.count) 段",
                 hint: nextBlockHint,
                 tint: Theme.accent,
@@ -228,12 +233,12 @@ struct TodayView: View {
         blocks.filter { completed.contains($0.id) }.count
     }
 
-    /// 下一个还没打勾的区块提示
+    /// 下一个「时间上」要发生的时段（不再看有没有打勾）
     private var nextBlockHint: String {
-        guard let next = blocks.first(where: { !completed.contains($0.id) }) else {
-            return "今天全部完成"
+        if let next = nextBlock {
+            return ClockFormatter.hhmm(next.startMinute)
         }
-        return "下一项 \(ClockFormatter.hhmm(next.startMinute))"
+        return "今天已结束"
     }
 
     private var reviewDueCount: Int {
@@ -422,7 +427,7 @@ struct TodayView: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("今日课表")
+                        Text("今日事项")
                             .font(.headline)
                         Text("已完成 \(completedBlockCount)/\(blocks.count) 段")
                             .font(.footnote)
@@ -482,35 +487,39 @@ struct TodayView: View {
 
     private func timetableFocusRow(_ block: ScheduleBlock, label: String, emphasized: Bool) -> some View {
         HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(ClockFormatter.hhmm(block.startMinute))
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundStyle(emphasized ? Theme.accent : Theme.secondaryLabel)
-                Text(ClockFormatter.hhmm(block.endMinute))
-                    .font(.system(size: 11))
-                    .foregroundStyle(Theme.tertiaryLabel)
-            }
-            .frame(width: 44, alignment: .leading)
+            // 左：开始时间（结束时间不再单列，避免与右侧标签同一行造成误读）
+            Text(ClockFormatter.hhmm(block.startMinute))
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundStyle(emphasized ? Theme.accent : Theme.secondaryLabel)
+                .frame(width: 46, alignment: .leading)
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text(block.title)
-                    .font(emphasized ? .subheadline.weight(.semibold) : .subheadline)
-                    .foregroundStyle(emphasized ? Theme.label : Theme.secondaryLabel)
-                    .lineLimit(2)
-                Text(label)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(emphasized ? Theme.accent : Theme.tertiaryLabel)
-            }
+            Text(block.title)
+                .font(emphasized ? .subheadline.weight(.semibold) : .subheadline)
+                .foregroundStyle(emphasized ? Theme.label : Theme.secondaryLabel)
+                .lineLimit(2)
 
-            Spacer(minLength: 0)
+            Spacer(minLength: 6)
 
+            // 右：状态胶囊 + 时长
             if block.kind.countsAsStudy {
                 Text(ClockFormatter.hoursText(block.durationHours))
                     .font(.system(size: 11))
                     .foregroundStyle(Theme.tertiaryLabel)
             }
+
+            Text(label)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(emphasized ? Color.white : Theme.secondaryLabel)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(
+                    emphasized
+                        ? Theme.accent
+                        : Color(uiColor: .tertiarySystemFill)
+                )
+                .clipShape(Capsule())
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 7)
         .padding(.horizontal, 10)
         .background(emphasized ? Theme.accent.opacity(0.07) : Color.clear)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -771,7 +780,7 @@ struct TodayView: View {
         return Card {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("本周专注")
+                    Text("本周专注 · 至今")
                         .font(.headline)
                     Spacer()
                     NavigationLink {

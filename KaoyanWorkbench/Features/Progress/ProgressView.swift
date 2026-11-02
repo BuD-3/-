@@ -53,13 +53,23 @@ struct ProgressView: View {
                     Spacer()
                     ZStack {
                         RingProgress(value: store.overallProgress, tint: Theme.accent, lineWidth: 7)
-                            .frame(width: 62, height: 62)
+                            .frame(width: 56, height: 56)
                         Text(ClockFormatter.percent(store.overallProgress))
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
                             .foregroundStyle(Theme.accent)
                     }
                 }
 
+                // 按轮次分段（决策 11）
+                VStack(spacing: 9) {
+                    ForEach(store.progressByRound()) { round in
+                        roundRow(round)
+                    }
+                }
+
+                Divider()
+
+                // 四科分布保留
                 VStack(spacing: 8) {
                     ForEach(Subject.allCases) { subject in
                         let stats = store.progressStats(for: subject)
@@ -82,61 +92,108 @@ struct ProgressView: View {
         }
     }
 
+    private func roundRow(_ round: RoundProgress) -> some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 6) {
+                Text(round.name)
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(Theme.label)
+                Spacer()
+                Text("\(round.done)/\(round.total)")
+                    .font(.footnote.monospacedDigit())
+                    .foregroundStyle(Theme.tertiaryLabel)
+                Text(ClockFormatter.percent(round.ratio))
+                    .font(.footnote.monospacedDigit().weight(.medium))
+                    .foregroundStyle(round.ratio > 0 ? Theme.accent : Theme.tertiaryLabel)
+                    .frame(width: 38, alignment: .trailing)
+            }
+            ProgressBar(value: round.ratio, tint: Theme.accent, height: 7)
+        }
+    }
+
     // MARK: - 本月重点
 
     private var monthFocusCard: some View {
-        let focus = store.currentMonthFocus()
+        let items = store.currentMonthItems()
+        let done = items.filter { $0.isDone }.count
         let beforeStart = store.isBeforePlanStart
+        let ratio = items.isEmpty ? 0 : Double(done) / Double(items.count)
+
+        // 未完成的排在前面
+        let sorted = items.sorted { a, b in
+            if a.isDone != b.isDone { return !a.isDone }
+            return a.title < b.title
+        }
+
         return Card {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Label(beforeStart ? "启动月该推进" : "本月该推进", systemImage: beforeStart ? "flag.checkered" : "scope")
+                    Label(beforeStart ? "启动月进度" : "本月进度",
+                          systemImage: beforeStart ? "flag.checkered" : "scope")
                         .font(.subheadline.weight(.semibold))
                     Spacer()
-                    Text("\(focus.count) 项")
-                        .font(.footnote)
+                    Text("\(done)/\(items.count) 项 · \(ClockFormatter.percent(ratio))")
+                        .font(.footnote.monospacedDigit())
                         .foregroundStyle(Theme.tertiaryLabel)
                 }
 
-                if beforeStart {
-                    Text("备考 2026-11-01 启动，下面是首月任务。现在可以先翻翻高数和数据结构第一章。")
-                        .font(.footnote)
-                        .foregroundStyle(Theme.secondaryLabel)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                if focus.isEmpty {
-                    Text(beforeStart ? "启动月任务已全部勾完。" : "本月计划项已全部勾完。")
+                if items.isEmpty {
+                    Text("本月没有排定的进度项。")
                         .font(.footnote)
                         .foregroundStyle(Theme.secondaryLabel)
                 } else {
-                    ForEach(focus.prefix(6)) { item in
-                        Button {
-                            withAnimation { store.toggleProgress(item) }
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "circle")
-                                    .font(.footnote)
-                                    .foregroundStyle(Theme.color(for: item.subject))
-                                SubjectBadge(subject: item.subject, compact: true)
-                                Text(item.title)
-                                    .font(.footnote)
-                                    .foregroundStyle(Theme.label)
-                                    .lineLimit(1)
-                                Spacer(minLength: 0)
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
+                    ProgressBar(value: ratio, tint: Theme.accent, height: 8)
+
+                    if beforeStart {
+                        Text("备考 2026-11-01 启动，下面是首月任务。")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.secondaryLabel)
                     }
-                    if focus.count > 6 {
-                        Text("还有 \(focus.count - 6) 项…")
+
+                    VStack(spacing: 0) {
+                        ForEach(Array(sorted.prefix(10).enumerated()), id: \.element.id) { index, item in
+                            monthItemRow(item)
+                            if index < min(sorted.count, 10) - 1 {
+                                Divider().padding(.leading, 26)
+                            }
+                        }
+                    }
+
+                    if sorted.count > 10 {
+                        Text("还有 \(sorted.count - 10) 项…")
                             .font(.footnote)
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                 }
             }
         }
+    }
+
+    private func monthItemRow(_ item: ProgressItem) -> some View {
+        Button {
+            withAnimation(.easeOut(duration: 0.15)) {
+                store.toggleProgress(item)
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 16))
+                    .foregroundStyle(item.isDone ? Theme.color(for: item.subject) : Theme.tertiaryLabel)
+
+                SubjectBadge(subject: item.subject, compact: true)
+
+                Text(item.title)
+                    .font(.footnote)
+                    .foregroundStyle(item.isDone ? Theme.tertiaryLabel : Theme.label)
+                    .strikethrough(item.isDone, color: Theme.tertiaryLabel)
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - 分科

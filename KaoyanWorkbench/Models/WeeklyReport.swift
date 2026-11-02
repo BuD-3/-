@@ -109,3 +109,17 @@ struct WeekReport: Identifiable {
         return "本周 \(pct)%，掉得有点多。14 个月的对手不是难度，是中断——明天重新开始，不用补偿前面的。"
     }
 }
+
+
+// MARK: - 进度按轮次
+
+struct RoundProgress: Identifiable {
+    var id: String { name }
+    let name: String
+    let done: Int
+    let total: Int
+
+    var ratio: Double {
+        total > 0 ? Double(done) / Double(total) : 0
+    }
+}

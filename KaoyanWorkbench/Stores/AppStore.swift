@@ -533,6 +533,52 @@ final class AppStore: ObservableObject {
         return order.map { ModuleGroup(module: $0, items: map[$0] ?? []) }
     }
 
+    // MARK: - 按轮次统计（决策 11）
+
+    /// 三轮：基础（地基+一轮）/ 强化 / 真题（冲刺+考前）
+    func progressByRound() -> [RoundProgress] {
+        let monthStage = Dictionary(
+            uniqueKeysWithValues: ExamPlanData.months.map { ($0.id, $0.stage) }
+        )
+
+        func roundIndex(_ stage: PlanStage) -> Int {
+            switch stage {
+            case .foundation, .roundOne: return 0
+            case .strengthen: return 1
+            case .sprint, .examWeek: return 2
+            }
+        }
+
+        let names = ["第一轮 · 基础", "第二轮 · 强化", "第三轮 · 真题"]
+        var done = [0, 0, 0]
+        var total = [0, 0, 0]
+
+        for item in progressItems {
+            guard let firstMonth = item.planMonthList.first,
+                  let stage = monthStage[firstMonth] else { continue }
+            let idx = roundIndex(stage)
+            total[idx] += 1
+            if item.isDone { done[idx] += 1 }
+        }
+
+        return (0..<3).map {
+            RoundProgress(name: names[$0], done: done[$0], total: total[$0])
+        }
+    }
+
+    // MARK: - 本月完成度（决策 12）
+
+    /// 本月（或启动月）的全部进度项，含已完成的
+    func currentMonthItems() -> [ProgressItem] {
+        let key = CalendarHelper.monthKey(Date())
+        var items = progressItems.filter { $0.planMonthList.contains(key) }
+        if items.isEmpty, Date() < PlanTimeline.startDate {
+            let startKey = CalendarHelper.monthKey(PlanTimeline.startDate)
+            items = progressItems.filter { $0.planMonthList.contains(startKey) }
+        }
+        return items
+    }
+
     /// 依据当前月份，给出这个月应该推进的进度项。
     /// 备考尚未开始时（今天早于 2026-11-01），回落到计划起点那个月，
     /// 避免打开 App 看到「0 项」不知所措。
