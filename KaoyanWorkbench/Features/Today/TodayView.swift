@@ -580,88 +580,115 @@ struct TodayView: View {
     private func blockRow(_ block: ScheduleBlock, isLast: Bool) -> some View {
         let isDone = completed.contains(block.id)
         let isStudy = block.kind.countsAsStudy
+        let tint = Theme.color(of: block.kind)
+
         return VStack(spacing: 0) {
             Button {
                 withAnimation(.easeOut(duration: 0.18)) {
                     store.toggleBlock(block, on: today)
                 }
             } label: {
-                HStack(alignment: .top, spacing: 12) {
+                HStack(spacing: 10) {
+                    // 时间轴 + 明确的勾选圈
                     VStack(spacing: 0) {
                         ZStack {
                             Circle()
-                                .fill(isDone ? Theme.color(of: block.kind) : Theme.color(of: block.kind).opacity(0.12))
-                                .frame(width: 22, height: 22)
+                                .strokeBorder(
+                                    isDone ? tint : tint.opacity(0.35),
+                                    lineWidth: isDone ? 0 : 1.5
+                                )
+                                .background(
+                                    Circle().fill(isDone ? tint : Color.clear)
+                                )
+                                .frame(width: 20, height: 20)
+
                             if isDone {
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 11, weight: .bold))
+                                    .font(.system(size: 10, weight: .bold))
                                     .foregroundStyle(.white)
-                            } else {
-                                Circle()
-                                    .fill(Theme.color(of: block.kind))
-                                    .frame(width: 6, height: 6)
                             }
                         }
                         if !isLast {
                             Rectangle()
-                                .fill(Theme.separator.opacity(0.5))
+                                .fill(Theme.separator.opacity(0.45))
                                 .frame(width: 1.5)
                                 .frame(maxHeight: .infinity)
                                 .padding(.vertical, 2)
                         }
                     }
-                    .frame(width: 22)
+                    .frame(width: 20)
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 8) {
-                            Text(block.timeRangeText)
-                                .font(.footnote.monospacedDigit())
-                                .foregroundStyle(Theme.tertiaryLabel)
-                            if isStudy {
-                                Text(ClockFormatter.hoursText(block.durationHours))
-                                    .font(.footnote)
-                                    .foregroundStyle(Theme.tertiaryLabel)
-                            }
-                        }
-                        Text(block.title)
-                            .font(.subheadline.weight(isStudy ? .medium : .regular))
-                            .foregroundStyle(isDone ? Theme.tertiaryLabel : Theme.label)
-                            .strikethrough(isDone, color: Theme.tertiaryLabel)
-                            .multilineTextAlignment(.leading)
+                    // 时间
+                    Text(ClockFormatter.hhmm(block.startMinute))
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(isDone ? Theme.tertiaryLabel : (isStudy ? tint : Theme.secondaryLabel))
+                        .frame(width: 42, alignment: .leading)
+
+                    // 标题（学习块更重，生活块更轻）
+                    Text(block.title)
+                        .font(.footnote.weight(isStudy ? .medium : .regular))
+                        .foregroundStyle(
+                            isDone ? Theme.tertiaryLabel : (isStudy ? Theme.label : Theme.secondaryLabel)
+                        )
+                        .strikethrough(isDone, color: Theme.tertiaryLabel)
+                        .lineLimit(1)
+                        .multilineTextAlignment(.leading)
+
+                    Spacer(minLength: 6)
+
+                    // 右侧只保留一个时长，且只对学习块显示
+                    if isStudy {
+                        Text(ClockFormatter.hoursText(block.durationHours))
+                            .font(.system(size: 11))
+                            .foregroundStyle(Theme.tertiaryLabel)
+                            .monospacedDigit()
                     }
-                    Spacer(minLength: 0)
                 }
-                .padding(.vertical, 7)
+                .padding(.vertical, 9)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
     }
 
+    /// 额外补记：用两个小按钮代替占宽的 Stepper
     private var extraTimeRow: some View {
         HStack(spacing: 8) {
             Image(systemName: "plus.circle")
+                .font(.system(size: 13))
                 .foregroundStyle(Theme.secondaryLabel)
             Text("额外补记")
                 .font(.footnote)
                 .foregroundStyle(Theme.secondaryLabel)
+
             Spacer()
+
             Text(record.extraStudyMinutes == 0 ? "无" : ClockFormatter.minutesText(record.extraStudyMinutes))
                 .font(.footnote.weight(.medium))
-                .foregroundStyle(Theme.secondaryLabel)
+                .foregroundStyle(record.extraStudyMinutes == 0 ? Theme.tertiaryLabel : Theme.secondaryLabel)
                 .monospacedDigit()
-            Stepper(
-                "",
-                value: Binding(
-                    get: { record.extraStudyMinutes },
-                    set: { store.setExtraMinutes($0, on: today) }
-                ),
-                in: 0...600,
-                step: 15
-            )
-            .labelsHidden()
+
+            stepButton(symbol: "minus", enabled: record.extraStudyMinutes > 0) {
+                store.setExtraMinutes(max(0, record.extraStudyMinutes - 15), on: today)
+            }
+            stepButton(symbol: "plus", enabled: true) {
+                store.setExtraMinutes(min(600, record.extraStudyMinutes + 15), on: today)
+            }
         }
-        .padding(.top, 4)
+        .padding(.top, 6)
+    }
+
+    private func stepButton(symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(enabled ? Theme.accent : Theme.tertiaryLabel)
+                .frame(width: 26, height: 26)
+                .background(Theme.tertiaryCard)
+                .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
     }
 
     // MARK: - 今日上传的学习内容
