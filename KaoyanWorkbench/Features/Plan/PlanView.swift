@@ -22,6 +22,16 @@ struct PlanView: View {
         var id: String { rawValue }
     }
 
+    /// 截图用：--plan-seg N 直接打开某个分段（0 逐月 1 节点 2 目标 3 课表）
+    private static var launchSegment: PlanSegment {
+        let args = ProcessInfo.processInfo.arguments
+        guard let idx = args.firstIndex(of: "--plan-seg"),
+              idx + 1 < args.count,
+              let value = Int(args[idx + 1]),
+              value >= 0, value < PlanSegment.allCases.count else { return .roadmap }
+        return PlanSegment.allCases[value]
+    }
+
     private var currentMonthID: String? {
         ExamPlanData.currentMonth(on: Date())?.id
     }
@@ -45,6 +55,11 @@ struct PlanView: View {
                 .padding(.vertical, 12)
             }
             .background(Theme.background)
+            .onAppear {
+                if ProcessInfo.processInfo.arguments.contains("--plan-seg") {
+                    selection = PlanView.launchSegment
+                }
+            }
             .navigationTitle("计划")
             .navigationBarTitleDisplayMode(.large)
         }
