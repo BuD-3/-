@@ -14,6 +14,7 @@ final class AppStore: ObservableObject {
 
     // MARK: - 持久化键
     private enum Key {
+        static let words = "words"
         static let checkIns = "checkIns"
         static let mistakes = "mistakes"
         static let progress = "progress"
@@ -31,6 +32,7 @@ final class AppStore: ObservableObject {
     @Published private(set) var budgetEntries: [BudgetEntry] = []
     @Published private(set) var todos: [TodoItem] = []
     @Published private(set) var materials: [StudyMaterial] = []
+    @Published private(set) var words: [WordEntry] = []
     @Published var settings: AppSettings = AppSettings()
 
     /// 当前页签（行动卡可以跳转到别的页）
@@ -150,6 +152,7 @@ final class AppStore: ObservableObject {
         budgetEntries = Persistence.shared.load([BudgetEntry].self, from: Key.budget) ?? []
         todos = Persistence.shared.load([TodoItem].self, from: Key.todos) ?? []
         materials = Persistence.shared.load([StudyMaterial].self, from: Key.materials) ?? []
+        words = Persistence.shared.load([WordEntry].self, from: Key.words) ?? []
         settings = Persistence.shared.load(AppSettings.self, from: Key.settings) ?? AppSettings()
     }
 
@@ -176,6 +179,10 @@ final class AppStore: ObservableObject {
 
         $materials.dropFirst().sink { value in
             Persistence.shared.save(value, to: Key.materials)
+        }.store(in: &cancellables)
+
+        $words.dropFirst().sink { value in
+            Persistence.shared.save(value, to: Key.words)
         }.store(in: &cancellables)
 
         $settings.dropFirst().sink { value in
@@ -531,6 +538,91 @@ final class AppStore: ObservableObject {
             map[item.module, default: []].append(item)
         }
         return order.map { ModuleGroup(module: $0, items: map[$0] ?? []) }
+    }
+
+    // MARK: - 最近 N 周趋势（决策 26）
+
+    /// 最近 count 周的每周学习小时数（含本周）
+    func recentWeeks(count: Int = 8) -> [(label: String, hours: Double)] {
+        var result: [(label: String, hours: Double)] = []
+        let today = Date()
+        for offset in stride(from: count - 1, through: 0, by: -1) {
+            let weekStart = CalendarHelper.adding(days: -7 * offset, to: CalendarHelper.startOfWeek(today))
+            var total = 0.0
+            for dayOffset in 0..<7 {
+                let day = CalendarHelper.adding(days: dayOffset, to: weekStart)
+                let key = DateKey.key(for: day)
+                if let record = checkIns[key] {
+                    total += studyHours(on: day)
+                }
+            }
+            let label = offset == 0 ? "本周" : "\(count - offset)周前"
+            result.append((label: label, hours: total))
+        }
+        return result
+    }
+
+    /// 记录某个进度项的自测分数（决策 14/17）
+    func setSelfTestScore(_ item: ProgressItem, score: String) {
+        guard let index = progressItems.firstIndex(where: { $0.id == item.id }) else { return }
+        progressItems[index].selfTestScore = score
+    }
+
+    // MARK: - 单词本（决策 10）
+
+    /// 今天要回顾的词（昨天或更早录入、今天还没过）
+    func dueWords(on date: Date = Date()) -> [WordEntry] {
+        words.filter { $0.isDue(on: date) }
+            .sorted { $0.addedAt < $1.addedAt }
+    }
+
+    /// 今天新录入的词数
+    var wordsAddedToday: Int {
+        let todayKey = DateKey.key(for: Date())
+        return words.filter { $0.addedDayKey == todayKey }.count
+    }
+
+    var masteredWordCount: Int {
+        words.filter { $0.isMastered }.count
+    }
+
+    /// 批量导入："word | 释义" 每行一条，也支持只写单词
+    @discardableResult
+    func importWords(_ raw: String) -> Int {
+        let lines = raw
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+
+        var added = 0
+        var existing = Set(words.map { $0.text.lowercased() })
+        for line in lines {
+            let parts = line.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
+            guard let word = parts.first, !word.isEmpty else { continue }
+            let key = word.lowercased()
+            guard !existing.contains(key) else { continue }
+            existing.insert(key)
+            let meaning = parts.count > 1 ? parts[1] : ""
+            words.append(WordEntry(text: word, meaning: meaning, addedAt: Date()))
+            added += 1
+        }
+        return added
+    }
+
+    /// 回顾一个词：记住 → streak+1；忘了 → streak 归零
+    func reviewWord(_ word: WordEntry, remembered: Bool) {
+        guard let index = words.firstIndex(where: { $0.id == word.id }) else { return }
+        words[index].lastReviewedAt = Date()
+        words[index].reviewCount += 1
+        if remembered {
+            words[index].streak += 1
+        } else {
+            words[index].streak = 0
+        }
+    }
+
+    func deleteWord(_ word: WordEntry) {
+        words.removeAll { $0.id == word.id }
     }
 
     // MARK: - 按轮次统计（决策 11）

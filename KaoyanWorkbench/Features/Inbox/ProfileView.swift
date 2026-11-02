@@ -252,92 +252,55 @@ struct ProfileView: View {
     // MARK: - 模块入口
 
     private var moduleGrid: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 12) {
-                NavigationLink {
-                    HealthView()
-                } label: {
-                    moduleTile(
-                        title: "健康运动",
-                        subtitle: "\(store.weekExerciseDays) 天 / 本周",
-                        symbol: "figure.run",
-                        tint: Color(red: 0.30, green: 0.65, blue: 0.42)
-                    )
-                }
-                .buttonStyle(.plain)
-
-                NavigationLink {
-                    BudgetView()
-                } label: {
-                    moduleTile(
-                        title: "预算",
-                        subtitle: ClockFormatter.currency(store.remainingFunds) + " 余",
-                        symbol: "yensign.circle.fill",
-                        tint: Color(red: 0.90, green: 0.60, blue: 0.10)
-                    )
-                }
-                .buttonStyle(.plain)
+        LazyVGrid(
+            columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+            spacing: 12
+        ) {
+            NavigationLink {
+                HealthView()
+            } label: {
+                moduleTile(
+                    title: "健康运动",
+                    subtitle: "\(store.weekExerciseDays) 天 / 本周",
+                    symbol: "figure.run",
+                    tint: Color(red: 0.30, green: 0.65, blue: 0.42)
+                )
             }
+            .buttonStyle(.plain)
+
+            NavigationLink {
+                BudgetView()
+            } label: {
+                moduleTile(
+                    title: "预算",
+                    subtitle: ClockFormatter.currency(store.remainingFunds) + " 余",
+                    symbol: "yensign.circle.fill",
+                    tint: Color(red: 0.90, green: 0.60, blue: 0.10)
+                )
+            }
+            .buttonStyle(.plain)
 
             NavigationLink {
                 LibraryView()
             } label: {
-                HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(Color(red: 0.55, green: 0.32, blue: 0.86).opacity(0.13))
-                            .frame(width: 36, height: 36)
-                        Image(systemName: "books.vertical.fill")
-                            .font(.system(size: 17))
-                            .foregroundStyle(Color(red: 0.55, green: 0.32, blue: 0.86))
-                    }
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("资料库")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Theme.label)
-                        Text(librarySubtitle)
-                            .font(.footnote)
-                            .foregroundStyle(Theme.secondaryLabel)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.footnote)
-                        .foregroundStyle(Theme.tertiaryLabel)
-                }
-                .padding(12)
-                .background(Theme.card)
-                .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+                moduleTile(
+                    title: "资料库",
+                    subtitle: "\(store.totalMaterialCount) 份",
+                    symbol: "books.vertical.fill",
+                    tint: Color(red: 0.55, green: 0.32, blue: 0.86)
+                )
             }
             .buttonStyle(.plain)
 
             NavigationLink {
                 WeeklyReportView()
             } label: {
-                HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(Theme.accent.opacity(0.13))
-                            .frame(width: 36, height: 36)
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.system(size: 17))
-                            .foregroundStyle(Theme.accent)
-                    }
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("学习周报")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Theme.label)
-                        Text(weeklySubtitle)
-                            .font(.footnote)
-                            .foregroundStyle(Theme.secondaryLabel)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.footnote)
-                        .foregroundStyle(Theme.tertiaryLabel)
-                }
-                .padding(12)
-                .background(Theme.card)
-                .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+                moduleTile(
+                    title: "学习周报",
+                    subtitle: String(format: "%.1f 小时", store.weekReport().totalHours),
+                    symbol: "chart.line.uptrend.xyaxis",
+                    tint: Theme.accent
+                )
             }
             .buttonStyle(.plain)
         }

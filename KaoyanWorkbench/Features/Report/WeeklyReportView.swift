@@ -22,6 +22,7 @@ struct WeeklyReportView: View {
             VStack(spacing: Theme.spacing) {
                 weekSwitcher
                 overviewCard
+                trendCard
                 chartCard
                 breakdownCard
                 detailCard
@@ -86,6 +87,43 @@ struct WeeklyReportView: View {
     }
 
     // MARK: - 概览
+
+    /// 最近 8 周趋势（决策 26）
+    private var trendCard: some View {
+        let weeks = store.recentWeeks(count: 8)
+        let maxHours = max(1.0, weeks.map { $0.hours }.max() ?? 1)
+        return Card {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("近 8 周")
+                        .font(.headline)
+                    Spacer()
+                    Text("平均 \(String(format: "%.1f", weeks.map { $0.hours }.reduce(0, +) / Double(max(1, weeks.count)))) 小时")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.tertiaryLabel)
+                }
+
+                HStack(alignment: .bottom, spacing: 6) {
+                    ForEach(Array(weeks.enumerated()), id: \.offset) { index, week in
+                        VStack(spacing: 5) {
+                            Text(String(format: "%.0f", week.hours))
+                                .font(.system(size: 9))
+                                .foregroundStyle(Theme.tertiaryLabel)
+                                .monospacedDigit()
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(index == weeks.count - 1 ? Theme.accent : Theme.accent.opacity(0.35))
+                                .frame(height: max(4, 68 * week.hours / maxHours))
+                            Text(index == weeks.count - 1 ? "本周" : "\(weeks.count - 1 - index)")
+                                .font(.system(size: 9))
+                                .foregroundStyle(Theme.tertiaryLabel)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .frame(height: 108, alignment: .bottom)
+            }
+        }
+    }
 
     private var overviewCard: some View {
         Card {

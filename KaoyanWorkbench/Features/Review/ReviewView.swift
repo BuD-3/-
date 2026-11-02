@@ -43,6 +43,9 @@ struct ReviewView: View {
             ScrollView {
                 VStack(spacing: Theme.spacing) {
                     summaryCard
+                    if !store.mistakes.isEmpty {
+                        distributionCard
+                    }
                     filterBar
                     if filtered.isEmpty {
                         emptyState
@@ -110,6 +113,69 @@ struct ReviewView: View {
                                  value: "\(store.mistakes.filter { $0.status == .mastered }.count)",
                                  tint: Color(red: 0.18, green: 0.68, blue: 0.42),
                                  symbol: "checkmark.seal.fill")
+                    }
+                }
+            }
+        }
+    }
+
+    /// 错误分布：按错误类型聚合
+    /// 按错误类型聚合
+    private var typeCounts: [MistakeTypeBar] {
+        MistakeType.allCases.map { type in
+            MistakeTypeBar(
+                id: type.rawValue,
+                name: type.rawValue,
+                count: store.mistakes.filter { $0.errorType == type }.count,
+                color: type.tint
+            )
+        }
+        .filter { $0.count > 0 }
+        .sorted { $0.count > $1.count }
+    }
+
+    private var distributionCard: some View {
+        let counts = typeCounts
+        let maxCount = max(1, counts.map { $0.count }.max() ?? 1)
+        return Card {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("错误分布")
+                        .font(.headline)
+                    Spacer()
+                    Text("共 \(store.mistakes.count) 条")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.tertiaryLabel)
+                }
+
+                VStack(spacing: 7) {
+                    ForEach(counts) { item in
+                        HStack(spacing: 8) {
+                            Text(item.name)
+                                .font(.footnote)
+                                .foregroundStyle(Theme.secondaryLabel)
+                                .frame(width: 58, alignment: .leading)
+                            GeometryReader { geo in
+                                ZStack(alignment: .leading) {
+                                    Capsule()
+                                        .fill(Theme.separator.opacity(0.25))
+                                        .frame(height: 6)
+                                    Capsule()
+                                        .fill(item.color)
+                                        .frame(
+                                            width: max(4, geo.size.width * Double(item.count) / Double(maxCount)),
+                                            height: 6
+                                        )
+                                }
+                                .frame(height: 6)
+                                .frame(maxHeight: .infinity, alignment: .center)
+                            }
+                            .frame(height: 12)
+                            Text("\(item.count)")
+                                .font(.footnote.monospacedDigit())
+                                .foregroundStyle(Theme.tertiaryLabel)
+                                .frame(width: 22, alignment: .trailing)
+                        }
                     }
                 }
             }
@@ -403,6 +469,29 @@ struct MistakeEditorView: View {
                 errorType = mistake.errorType
                 correctIdea = mistake.correctIdea
             }
+        }
+    }
+}
+
+
+// MARK: - 分布条
+
+struct MistakeTypeBar: Identifiable {
+    let id: String
+    let name: String
+    let count: Int
+    let color: Color
+}
+
+extension MistakeType {
+    var tint: Color {
+        switch self {
+        case .calculation: return Color(red: 0.90, green: 0.45, blue: 0.15)
+        case .concept: return Color(red: 0.85, green: 0.25, blue: 0.30)
+        case .method: return Color(red: 0.55, green: 0.32, blue: 0.86)
+        case .careless: return Color(red: 0.20, green: 0.55, blue: 0.90)
+        case .blank: return Color(red: 0.45, green: 0.45, blue: 0.50)
+        case .time: return Color(red: 0.18, green: 0.68, blue: 0.42)
         }
     }
 }

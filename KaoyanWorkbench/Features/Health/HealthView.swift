@@ -123,7 +123,19 @@ struct HealthView: View {
                                 tint: Color(red: 0.30, green: 0.65, blue: 0.42)
                             )
                         }
-                        if entry.walkedMinutes > 0 {
+                        if entry.exerciseDistance > 0 {
+                        healthRow(symbol: "point.topleft.down.curvedto.point.bottomright.up",
+                                  title: "距离",
+                                  value: String(format: "%.1f 公里", entry.exerciseDistance))
+                    }
+
+                    if entry.exerciseReps > 0 {
+                        healthRow(symbol: "number.circle",
+                                  title: "个数",
+                                  value: "\(entry.exerciseReps) 个")
+                    }
+
+                    if entry.walkedMinutes > 0 {
                             healthRow(symbol: "figure.walk",
                                       title: "散步",
                                       value: ClockFormatter.minutesText(entry.walkedMinutes),
@@ -312,7 +324,7 @@ struct HealthEditorView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var draft: HealthEntry
-    @State private var exerciseType: ExerciseType = .walk
+    @State private var exerciseType: ExerciseType = .run
 
     init(entry: HealthEntry, onSave: @escaping (HealthEntry) -> Void) {
         self.entry = entry
@@ -334,12 +346,33 @@ struct HealthEditorView: View {
                         }
                         .onChange(of: exerciseType) { _, newValue in
                             draft.exerciseType = newValue.rawValue
+                            if !newValue.tracksDistance { draft.exerciseDistance = 0 }
+                            if !newValue.tracksReps { draft.exerciseReps = 0 }
                         }
 
-                        Stepper("运动 \(draft.exerciseMinutes) 分钟",
+                        Stepper("时长 \(draft.exerciseMinutes) 分钟",
                                 value: $draft.exerciseMinutes,
                                 in: 0...300,
                                 step: 5)
+
+                        if exerciseType.tracksDistance {
+                            HStack {
+                                Text("距离")
+                                Spacer()
+                                Text(String(format: "%.1f 公里", draft.exerciseDistance))
+                                    .foregroundStyle(Theme.secondaryLabel)
+                                    .monospacedDigit()
+                            }
+                            Slider(value: $draft.exerciseDistance, in: 0...50, step: 0.5)
+                                .tint(Theme.accent)
+                        }
+
+                        if exerciseType.tracksReps {
+                            Stepper("个数 \(draft.exerciseReps) 个",
+                                    value: $draft.exerciseReps,
+                                    in: 0...3000,
+                                    step: 50)
+                        }
                     }
 
                     Stepper("散步 \(draft.walkedMinutes) 分钟",
@@ -385,6 +418,8 @@ struct HealthEditorView: View {
                     Button("保存") {
                         if !draft.didExercise {
                             draft.exerciseMinutes = 0
+                            draft.exerciseDistance = 0
+                            draft.exerciseReps = 0
                         }
                         if draft.exerciseType.isEmpty, draft.didExercise {
                             draft.exerciseType = exerciseType.rawValue
@@ -406,6 +441,6 @@ struct HealthEditorView: View {
 
 extension HealthEntry {
     var exerciseTypeSymbol: String {
-        ExerciseType(rawValue: exerciseType)?.symbolName ?? "figure.mixed.cardio"
+        ExerciseType(rawValue: exerciseType)?.symbolName ?? "figure.run"
     }
 }

@@ -18,6 +18,9 @@ struct TodayView: View {
     /// 课表卡翻转状态（--flip-timetable 供截图）
     @State private var timetableFlipped = ProcessInfo.processInfo.arguments.contains("--flip-timetable")
 
+    /// 单词回顾弹窗
+    @State private var showingWordReview = false
+
     private var today: Date { Date() }
     private var blocks: [ScheduleBlock] { DailySchedule.blocks(for: today) }
     private var completed: Set<String> { store.completedBlocks(on: today) }
@@ -45,9 +48,7 @@ struct TodayView: View {
                             .id("timetable")
                         materialCard
                             .id("materials")
-                        if !record.reflection.isEmpty {
-                            reflectionPreview
-                        }
+                        reflectionPreview
                         weekSummaryCard
                     }
                     .padding(.horizontal, 16)
@@ -69,6 +70,9 @@ struct TodayView: View {
                 }
             }
             .background(Theme.background)
+            .sheet(isPresented: $showingWordReview) {
+                WordReviewSheet()
+            }
             .navigationTitle("今日")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -200,12 +204,12 @@ struct TodayView: View {
 
     // MARK: - 行动卡
 
-    /// 首页顶部只留两张「下一步做什么」的卡
+    /// 首页顶部三张「下一步做什么」的卡（决策 9：三张并列）
     private func actionCards(proxy: ScrollViewProxy) -> some View {
         HStack(spacing: 8) {
             ActionCard(
                 title: "今日事项",
-                value: "\(completedBlockCount)/\(blocks.count) 段",
+                value: "\(completedBlockCount)/\(blocks.count)",
                 hint: nextBlockHint,
                 tint: Theme.accent,
                 symbol: "list.bullet",
@@ -219,14 +223,29 @@ struct TodayView: View {
             ActionCard(
                 title: "错题回炉",
                 value: "\(reviewDueCount) 题",
-                hint: reviewDueCount > 0 ? "去回炉" : "队列已清空",
+                hint: reviewDueCount > 0 ? "去回炉" : "已清空",
                 tint: reviewDueCount > 0 ? .red : Color(red: 0.18, green: 0.68, blue: 0.42),
                 symbol: "arrow.triangle.2.circlepath",
                 isDone: reviewDueCount == 0
             ) {
                 store.activeTab = 2
             }
+
+            ActionCard(
+                title: "单词回顾",
+                value: "\(wordDueCount) 词",
+                hint: wordDueCount > 0 ? "去回顾" : "已清空",
+                tint: wordDueCount > 0 ? Color(red: 0.55, green: 0.32, blue: 0.86) : Color(red: 0.18, green: 0.68, blue: 0.42),
+                symbol: "text.book.closed",
+                isDone: wordDueCount == 0
+            ) {
+                showingWordReview = true
+            }
         }
+    }
+
+    private var wordDueCount: Int {
+        store.dueWords().count
     }
 
     private var completedBlockCount: Int {
@@ -753,22 +772,37 @@ struct TodayView: View {
 
     private var reflectionPreview: some View {
         Card {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Label("今日复盘", systemImage: "text.quote")
-                        .font(.subheadline.weight(.semibold))
-                    Spacer()
-                    Button("编辑") {
-                        reflectionDraft = record.reflection
-                        showingReflection = true
+            Button {
+                reflectionDraft = record.reflection
+                showingReflection = true
+            } label: {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Label("今日复盘", systemImage: "text.quote")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.label)
+                        Spacer()
+                        Text(record.reflection.isEmpty ? "写三行" : "编辑")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.accent)
                     }
-                    .font(.footnote)
+                    if record.reflection.isEmpty {
+                        Text("今天卡在哪、明天先做什么、身体状态如何")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.tertiaryLabel)
+                            .multilineTextAlignment(.leading)
+                    } else {
+                        Text(record.reflection)
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.secondaryLabel)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-                Text(record.reflection)
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.secondaryLabel)
-                    .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
         }
     }
 

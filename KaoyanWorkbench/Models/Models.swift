@@ -55,6 +55,10 @@ struct HealthEntry: Codable, Hashable {
     var didExercise: Bool = false
     var exerciseMinutes: Int = 0
     var exerciseType: String = ""
+    /// 跑步 / 骑行：公里数
+    var exerciseDistance: Double = 0
+    /// 跳绳：个数
+    var exerciseReps: Int = 0
     var walkedMinutes: Int = 0
     var sleepHours: Double = 0
     var waterCups: Int = 0
@@ -63,30 +67,52 @@ struct HealthEntry: Codable, Hashable {
     var isLogged: Bool {
         didExercise || exerciseMinutes > 0 || walkedMinutes > 0 || sleepHours > 0 || waterCups > 0
     }
+
+    /// 配速（分/公里），跑步用
+    var paceText: String? {
+        guard exerciseDistance > 0, exerciseMinutes > 0 else { return nil }
+        let minutesPerKM = Double(exerciseMinutes) / exerciseDistance
+        let m = Int(minutesPerKM)
+        let s = Int((minutesPerKM - Double(m)) * 60)
+        return String(format: "%d'%02d\"", m, s)
+    }
+
+    /// 均速（公里/小时），骑行用
+    var speedText: String? {
+        guard exerciseDistance > 0, exerciseMinutes > 0 else { return nil }
+        let kmh = exerciseDistance / (Double(exerciseMinutes) / 60)
+        return String(format: "%.1f km/h", kmh)
+    }
 }
 
-enum ExerciseType: String, CaseIterable, Identifiable {
-    case walk = "散步"
+enum ExerciseType: String, CaseIterable, Identifiable, Codable {
     case run = "跑步"
     case cycle = "骑行"
-    case strength = "力量"
     case rope = "跳绳"
-    case ball = "球类"
-    case stretch = "拉伸"
-    case other = "其他"
 
     var id: String { rawValue }
 
     var symbolName: String {
         switch self {
-        case .walk: return "figure.walk"
         case .run: return "figure.run"
         case .cycle: return "figure.outdoor.cycle"
-        case .strength: return "figure.strengthtraining.traditional"
         case .rope: return "figure.jumprope"
-        case .ball: return "figure.basketball"
-        case .stretch: return "figure.flexibility"
-        case .other: return "figure.mixed.cardio"
+        }
+    }
+
+    /// 是否记录距离（公里）
+    var tracksDistance: Bool {
+        switch self {
+        case .run, .cycle: return true
+        case .rope: return false
+        }
+    }
+
+    /// 是否记录个数
+    var tracksReps: Bool {
+        switch self {
+        case .rope: return true
+        default: return false
         }
     }
 }

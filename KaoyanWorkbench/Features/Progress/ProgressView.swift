@@ -10,6 +10,7 @@ import SwiftUI
 struct ProgressView: View {
     @EnvironmentObject private var store: AppStore
     @State private var expandedSubjects: Set<Subject> = Set(Subject.allCases)
+    @State private var scoreTarget: ProgressItem?
     @State private var libraryTarget: ProgressItem?
 
     var body: some View {
@@ -33,6 +34,11 @@ struct ProgressView: View {
             .navigationBarTitleDisplayMode(.large)
             .sheet(item: $libraryTarget) { item in
                 ProgressMaterialsSheet(item: item)
+            }
+            .sheet(item: $scoreTarget) { item in
+                ScoreEditorSheet(item: item) { score in
+                    store.setSelfTestScore(item, score: score)
+                }
             }
         }
     }
@@ -269,6 +275,25 @@ struct ProgressView: View {
         }
     }
 
+    /// 显示用分数文本
+    private func scoreText(_ item: ProgressItem) -> String {
+        let raw = item.selfTestScore.trimmingCharacters(in: .whitespaces)
+        return raw.isEmpty ? "未测" : raw
+    }
+
+    /// 按分数区间上色
+    private func scoreColor(_ item: ProgressItem) -> Color {
+        guard let value = Int(item.selfTestScore.trimmingCharacters(in: .whitespaces)) else {
+            return Theme.tertiaryLabel
+        }
+        switch value {
+        case ..<60: return .red
+        case 60..<80: return .orange
+        case 80..<90: return Theme.accent
+        default: return Color(red: 0.18, green: 0.68, blue: 0.42)
+        }
+    }
+
     private func progressRow(_ item: ProgressItem, subject: Subject) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Button {
@@ -292,6 +317,21 @@ struct ProgressView: View {
                             .foregroundStyle(Theme.tertiaryLabel)
                     }
                     Spacer(minLength: 0)
+
+                    // 分数（决策 14）：直接显示数字，没测就显示「未测」
+                    Button {
+                        scoreTarget = item
+                    } label: {
+                        Text(scoreText(item))
+                            .font(.footnote.monospacedDigit().weight(.semibold))
+                            .foregroundStyle(scoreColor(item))
+                            .frame(minWidth: 34)
+                            .padding(.vertical, 3)
+                            .padding(.horizontal, 6)
+                            .background(scoreColor(item).opacity(item.selfTestScore.isEmpty ? 0.06 : 0.12))
+                            .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
                 }
                 .contentShape(Rectangle())
             }

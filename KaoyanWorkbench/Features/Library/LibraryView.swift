@@ -16,10 +16,15 @@ struct LibraryView: View {
     @EnvironmentObject private var store: AppStore
     @State private var query = ""
     @State private var selectedSubject: Subject?
+    @State private var selectedChapterID: UUID?
     @State private var showingComposer = false
 
     private var materials: [StudyMaterial] {
-        store.filteredMaterials(subject: selectedSubject, query: query)
+        var list = store.filteredMaterials(subject: selectedSubject, query: query)
+        if let selectedChapterID {
+            list = list.filter { $0.progressItemID == selectedChapterID }
+        }
+        return list
     }
 
     var body: some View {
@@ -202,22 +207,62 @@ struct LibraryView: View {
 
     // MARK: - 筛选
 
+    /// 当前科目下的章节（用来做二级筛选）
+    private var chapters: [ProgressItem] {
+        store.progressItems.filter { item in
+            selectedSubject == nil || item.subject == selectedSubject
+        }
+    }
+
     private var filterBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                chip(nil, label: "全部科目")
-                ForEach(Subject.allCases) { subject in
-                    chip(subject, label: subject.shortName)
+        VStack(alignment: .leading, spacing: 8) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    chip(nil, label: "全部科目")
+                    ForEach(Subject.allCases) { subject in
+                        chip(subject, label: subject.shortName)
+                    }
+                }
+            }
+
+            if !chapters.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        chapterChip(nil, label: "全部章节")
+                        ForEach(chapters) { item in
+                            chapterChip(item.id, label: item.title)
+                        }
+                    }
                 }
             }
         }
+    }
+
+    private func chapterChip(_ id: UUID?, label: String) -> some View {
+        let isOn = selectedChapterID == id
+        return Button {
+            withAnimation(.easeOut(duration: 0.15)) { selectedChapterID = id }
+        } label: {
+            Text(label)
+                .font(.system(size: 12, weight: .medium))
+                .lineLimit(1)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(isOn ? Theme.accent.opacity(0.15) : Theme.tertiaryCard)
+                .foregroundStyle(isOn ? Theme.accent : Theme.secondaryLabel)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     private func chip(_ subject: Subject?, label: String) -> some View {
         let isOn = selectedSubject == subject
         let color = subject.map { Theme.color(for: $0) } ?? Theme.accent
         return Button {
-            withAnimation(.easeOut(duration: 0.15)) { selectedSubject = subject }
+            withAnimation(.easeOut(duration: 0.15)) {
+                selectedSubject = subject
+                selectedChapterID = nil
+            }
         } label: {
             Text(label)
                 .font(.footnote.weight(.medium))
