@@ -327,12 +327,12 @@ struct PlanView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Label("报考信息", systemImage: "graduationcap.fill")
                         .font(.subheadline.weight(.semibold))
-                    infoRow("院校", "河南大学 人工智能学院（郑州校区）")
-                    infoRow("专业", "085410 人工智能（专硕 · 全日制 · 3 年）")
+                    infoRow("院校", "目标院校（详见个人计划表）")
+                    infoRow("专业", "目标专业（专硕 · 全日制 · 3 年）")
                     infoRow("初试", "101 政治 / 204 英语二 / 302 数学二 / 408")
                     infoRow("身份", "同等学力（须加试《数字逻辑》《离散数学》）")
                     infoRow("复试", "机试 30% + 英语 10% + 面试 60%")
-                    infoRow("研招办", "0371-22867269")
+                    infoRow("研招办", "以目标院校官网为准")
                 }
             }
         }

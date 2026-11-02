@@ -104,7 +104,8 @@ struct WeeklyReportView: View {
                 }
 
                 HStack(alignment: .bottom, spacing: 6) {
-                    ForEach(Array(weeks.enumerated()), id: \.offset) { index, week in
+                    ForEach(weeks.indices, id: \.self) { index in
+                        let week = weeks[index]
                         VStack(spacing: 5) {
                             Text(String(format: "%.0f", week.hours))
                                 .font(.system(size: 9))

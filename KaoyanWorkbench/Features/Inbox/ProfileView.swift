@@ -219,9 +219,9 @@ struct ProfileView: View {
                             .foregroundStyle(Theme.accent)
                     }
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("2028 考研 · 河南大学")
+                        Text("2028 考研 · 目标院校")
                             .font(.subheadline.weight(.semibold))
-                        Text("085410 人工智能（专硕）· 脱产 14 个月")
+                        Text("目标专业（专硕）· 脱产 14 个月")
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                     }
