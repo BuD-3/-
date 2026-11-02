@@ -33,6 +33,8 @@ struct PlanView: View {
                     case .milestones: milestonesContent
                     case .targets: targetsContent
                     }
+
+                    ironRulesCard
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
@@ -40,6 +42,32 @@ struct PlanView: View {
             .background(Theme.background)
             .navigationTitle("计划")
             .navigationBarTitleDisplayMode(.large)
+        }
+    }
+
+    /// 三条铁律（原在今日页，因占用太多空间移到计划页底部）
+    private var ironRulesCard: some View {
+        Card(padding: 14) {
+            DisclosureGroup {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(NumberedLine.lines(from: IronRules.all)) { line in
+                        HStack(alignment: .top, spacing: 7) {
+                            Text("\(line.number).")
+                                .font(.footnote.weight(.bold))
+                                .foregroundStyle(.orange)
+                            Text(line.text)
+                                .font(.footnote)
+                                .foregroundStyle(Theme.secondaryLabel)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                .padding(.top, 8)
+            } label: {
+                Label("三条铁律", systemImage: "exclamationmark.shield.fill")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.orange)
+            }
         }
     }
 

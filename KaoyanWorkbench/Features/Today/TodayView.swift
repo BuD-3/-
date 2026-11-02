@@ -46,7 +46,6 @@ struct TodayView: View {
                             reflectionPreview
                         }
                         weekSummaryCard
-                        navigationHintCard
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
@@ -707,32 +706,6 @@ struct TodayView: View {
         }
     }
 
-    // MARK: - 提示
-
-    private var navigationHintCard: some View {
-        Card(padding: 12) {
-            DisclosureGroup {
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(NumberedLine.lines(from: IronRules.all)) { line in
-                        HStack(alignment: .top, spacing: 8) {
-                            Text("\(line.number).")
-                                .font(.footnote.weight(.bold))
-                                .foregroundStyle(.orange)
-                            Text(line.text)
-                                .font(.footnote)
-                                .foregroundStyle(Theme.secondaryLabel)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                }
-                .padding(.top, 8)
-            } label: {
-                Label("三条铁律", systemImage: "exclamationmark.shield.fill")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.orange)
-            }
-        }
-    }
 }
 
 // MARK: - 复盘编辑
