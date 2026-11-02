@@ -387,3 +387,52 @@ enum IronRules {
         "可持续优先于突击。14 个月真正的对手不是难度，是中途放弃。每周固定休一天，每月一次限时自测。"
     ]
 }
+
+
+// MARK: - 月份 → 科目文本 / 关键词
+
+extension MonthPlan {
+    func text(for subject: Subject) -> String {
+        switch subject {
+        case .math: return math
+        case .cs408: return cs408
+        case .english: return english
+        case .politics: return politics
+        }
+    }
+
+    func isIdle(for subject: Subject) -> Bool {
+        let raw = text(for: subject).trimmingCharacters(in: .whitespaces)
+        return raw.isEmpty || raw == "—" || raw == "-"
+    }
+
+    /// 把长文本压成一句关键词，用作科目卡正面
+    func shortText(for subject: Subject) -> String {
+        MonthPlan.condense(text(for: subject))
+    }
+
+    static func condense(_ source: String) -> String {
+        var s = source
+
+        // 「高数：xxx」→ 取冒号之后
+        if let r = s.range(of: "：") {
+            s = String(s[r.upperBound...])
+        }
+        // 去掉括号内容
+        s = s.replacingOccurrences(of: "（[^）]*）", with: "", options: .regularExpression)
+        s = s.replacingOccurrences(of: "\\([^)]*\\)", with: "", options: .regularExpression)
+        // 只取第一个分句
+        if let r = s.range(of: "；") {
+            s = String(s[..<r.lowerBound])
+        }
+        s = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        // 去掉结尾的逗号顿号
+        while let last = s.last, last == "，" || last == "、" || last == ";" {
+            s.removeLast()
+        }
+        if s.count > 12 {
+            s = String(s.prefix(12))
+        }
+        return s
+    }
+}

@@ -11,6 +11,9 @@ struct PlanView: View {
     @EnvironmentObject private var store: AppStore
     @State private var selection: PlanSegment = .roadmap
 
+    /// 关键节点是否展开全部
+    @State private var showAllMilestones = false
+
     enum PlanSegment: String, CaseIterable, Identifiable {
         case roadmap = "逐月路线"
         case milestones = "关键节点"
@@ -153,12 +156,17 @@ struct PlanView: View {
 
                 Divider().padding(.leading, 14)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    monthRow(subject: .math, text: month.math)
-                    monthRow(subject: .cs408, text: month.cs408)
-                    monthRow(subject: .english, text: month.english)
-                    if month.politics != "—" {
-                        monthRow(subject: .politics, text: month.politics)
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)],
+                    spacing: 8
+                ) {
+                    ForEach(Subject.allCases) { subject in
+                        SubjectFlipCard(
+                            subject: subject,
+                            short: month.shortText(for: subject),
+                            full: month.text(for: subject),
+                            isIdle: month.isIdle(for: subject)
+                        )
                     }
                 }
                 .padding(.horizontal, 14)
@@ -199,9 +207,35 @@ struct PlanView: View {
     // MARK: - 关键节点
 
     private var milestonesContent: some View {
-        VStack(spacing: 12) {
-            ForEach(MilestoneData.all) { milestone in
+        let today = CalendarHelper.startOfDay(Date())
+        let all = MilestoneData.all
+        let upcoming = all.filter { CalendarHelper.startOfDay($0.date) >= today }
+        let shown = showAllMilestones ? all : Array(upcoming.prefix(5))
+
+        return VStack(spacing: 12) {
+            ForEach(shown) { milestone in
                 milestoneRow(milestone)
+            }
+
+            if !showAllMilestones {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showAllMilestones = true
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("查看全部 \(all.count) 个节点")
+                            .font(.footnote)
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                    .foregroundStyle(Theme.accent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Theme.tertiaryCard)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -334,33 +368,12 @@ struct PlanView: View {
                         .foregroundStyle(Theme.color(for: subject))
                 }
 
-                // 分数区间条
-                GeometryReader { geo in
-                    let w = geo.size.width
-                    let full = Double(subject.fullScore)
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(Theme.separator.opacity(0.35))
-                            .frame(height: 8)
-                        Capsule()
-                            .fill(Theme.color(for: subject).opacity(0.18))
-                            .frame(width: w * (Double(subject.floorScore) / full), height: 8)
-                        Capsule()
-                            .fill(Theme.color(for: subject))
-                            .frame(width: max(4, w * (Double(subject.targetScore) / full)), height: 8)
-                    }
+                // 三个分数横排（决策 23：不再把 4 个数塞进一条区间条）
+                HStack(spacing: 8) {
+                    scorePill("底线", "\(subject.floorScore)", Theme.tertiaryLabel)
+                    scorePill("目标", "\(subject.targetScore)", Theme.color(for: subject))
+                    scorePill("冲刺", "\(subject.sprintScore)", Color(red: 0.18, green: 0.68, blue: 0.42))
                 }
-                .frame(height: 8)
-
-                HStack {
-                    Text("底线 \(subject.floorScore)")
-                    Spacer()
-                    Text("目标 \(subject.targetScore)")
-                    Spacer()
-                    Text("冲刺 \(subject.sprintScore)")
-                }
-                .font(.footnote)
-                .foregroundStyle(Theme.tertiaryLabel)
 
                 Divider()
 
