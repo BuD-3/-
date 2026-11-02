@@ -165,7 +165,7 @@ struct HealthView: View {
                 }
 
                 // 示例：课表里的「晚餐 + 散步」
-                let dinnerBlock = DailySchedule.blocks(for: today).first { $0.id.hasSuffix("dinner") }
+                let dinnerBlock = store.isolatedScheduleBlocks(for: today).first { $0.id.hasSuffix("dinner") }
                 if let dinnerBlock {
                     HStack(spacing: 8) {
                         Image(systemName: "info.circle")

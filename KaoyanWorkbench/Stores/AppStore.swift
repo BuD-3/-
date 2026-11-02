@@ -15,6 +15,7 @@ final class AppStore: ObservableObject {
     // MARK: - 持久化键
     private enum Key {
         static let words = "words"
+        static let schedule = "schedule"
         static let checkIns = "checkIns"
         static let mistakes = "mistakes"
         static let progress = "progress"
@@ -33,6 +34,7 @@ final class AppStore: ObservableObject {
     @Published private(set) var todos: [TodoItem] = []
     @Published private(set) var materials: [StudyMaterial] = []
     @Published private(set) var words: [WordEntry] = []
+    @Published private(set) var schedule: ScheduleTemplate = .default
     @Published var settings: AppSettings = AppSettings()
 
     /// 当前页签（行动卡可以跳转到别的页）
@@ -118,7 +120,7 @@ final class AppStore: ObservableObject {
             guard day >= weekStart else { continue }
             guard checkIns[DateKey.key(for: day)] == nil else { continue }
 
-            let blocks = DailySchedule.blocks(for: day)
+            let blocks = schedule.blocks(for: day)
             var done = Set<String>()
             for (index, block) in blocks.enumerated() where block.kind.countsAsStudy {
                 // 越近的日子完成度越低，模拟真实的一周
@@ -153,6 +155,7 @@ final class AppStore: ObservableObject {
         todos = Persistence.shared.load([TodoItem].self, from: Key.todos) ?? []
         materials = Persistence.shared.load([StudyMaterial].self, from: Key.materials) ?? []
         words = Persistence.shared.load([WordEntry].self, from: Key.words) ?? []
+        schedule = Persistence.shared.load(ScheduleTemplate.self, from: Key.schedule) ?? .default
         settings = Persistence.shared.load(AppSettings.self, from: Key.settings) ?? AppSettings()
     }
 
@@ -183,6 +186,10 @@ final class AppStore: ObservableObject {
 
         $words.dropFirst().sink { value in
             Persistence.shared.save(value, to: Key.words)
+        }.store(in: &cancellables)
+
+        $schedule.dropFirst().sink { value in
+            Persistence.shared.save(value, to: Key.schedule)
         }.store(in: &cancellables)
 
         $settings.dropFirst().sink { value in
@@ -263,7 +270,7 @@ final class AppStore: ObservableObject {
     /// 某天的有效学习小时数（勾选的课表块 + 补记）
     func studyHours(on date: Date) -> Double {
         let record = checkIns[DateKey.key(for: date)] ?? DayCheckIn.empty(dateKey: DateKey.key(for: date))
-        let blocks = DailySchedule.blocks(for: date)
+        let blocks = schedule.blocks(for: date)
         let fromBlocks = blocks
             .filter { $0.kind.countsAsStudy && record.completedBlockIDs.contains($0.id) }
             .reduce(0.0) { $0 + $1.durationHours }
@@ -302,7 +309,7 @@ final class AppStore: ObservableObject {
     func sliceHours(on date: Date) -> [StudySlice: Double] {
         let record = checkIns[DateKey.key(for: date)] ?? DayCheckIn.empty(dateKey: DateKey.key(for: date))
         var result: [StudySlice: Double] = [:]
-        for block in DailySchedule.blocks(for: date) {
+        for block in schedule.blocks(for: date) {
             guard block.kind.countsAsStudy, record.completedBlockIDs.contains(block.id) else { continue }
             let slice: StudySlice
             switch block.kind {
@@ -413,7 +420,7 @@ final class AppStore: ObservableObject {
             guard let date = DateKey.date(from: record.dateKey) else { return sum }
             // 只累计备考启动日之后的学习，与「自 2026-11-01」的标签口径一致
             guard CalendarHelper.startOfDay(date) >= planStart else { return sum }
-            let blocks = DailySchedule.blocks(for: date)
+            let blocks = schedule.blocks(for: date)
             let hours = blocks
                 .filter { $0.kind.countsAsStudy && record.completedBlockIDs.contains($0.id) }
                 .reduce(0.0) { $0 + $1.durationHours }
@@ -567,6 +574,26 @@ final class AppStore: ObservableObject {
         guard let index = progressItems.firstIndex(where: { $0.id == item.id }) else { return }
         progressItems[index].selfTestScore = score
     }
+
+    /// 给视图用的课表取用（HealthView 用）
+    func isolatedScheduleBlocks(for date: Date) -> [ScheduleBlock] {
+        schedule.blocks(for: date)
+    }
+
+    // MARK: - 课表模板（决策 4）
+
+    func updateSchedule(_ template: ScheduleTemplate) {
+        schedule = template
+        refreshReminders()
+    }
+
+    func resetSchedule() {
+        schedule = .default
+        refreshReminders()
+    }
+
+    /// 当前周中课表计划分钟数
+    var weekdayPlannedMinutes: Int { schedule.weekdayPlannedMinutes }
 
     // MARK: - 单词本（决策 10）
 

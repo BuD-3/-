@@ -22,7 +22,7 @@ struct TodayView: View {
     @State private var showingWordReview = false
 
     private var today: Date { Date() }
-    private var blocks: [ScheduleBlock] { DailySchedule.blocks(for: today) }
+    private var blocks: [ScheduleBlock] { store.schedule.blocks(for: today) }
     private var completed: Set<String> { store.completedBlocks(on: today) }
     private var record: DayCheckIn { store.checkIn(for: today) }
     private var studiedHours: Double { store.studyHours(on: today) }

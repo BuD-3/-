@@ -255,12 +255,12 @@ enum ScheduleBlockKind: String, Codable, CaseIterable {
 }
 
 struct ScheduleBlock: Identifiable, Codable, Hashable {
-    let id: String
-    let startMinute: Int
-    let endMinute: Int
-    let title: String
-    let detail: String
-    let kind: ScheduleBlockKind
+    var id: String
+    var startMinute: Int
+    var endMinute: Int
+    var title: String
+    var detail: String
+    var kind: ScheduleBlockKind
 
     var durationMinutes: Int { max(0, endMinute - startMinute) }
     var durationHours: Double { Double(durationMinutes) / 60.0 }

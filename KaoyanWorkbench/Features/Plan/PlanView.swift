@@ -18,6 +18,7 @@ struct PlanView: View {
         case roadmap = "逐月路线"
         case milestones = "关键节点"
         case targets = "目标分数"
+        case schedule = "课表"
         var id: String { rawValue }
     }
 
@@ -35,6 +36,7 @@ struct PlanView: View {
                     case .roadmap: roadmapContent
                     case .milestones: milestonesContent
                     case .targets: targetsContent
+                    case .schedule: scheduleContent
                     }
 
                     ironRulesCard
@@ -201,6 +203,84 @@ struct PlanView: View {
                 .foregroundStyle(Theme.label)
                 .lineLimit(3)
             Spacer(minLength: 0)
+        }
+    }
+
+    // MARK: - 课表（可编辑）
+
+    private var scheduleContent: some View {
+        VStack(spacing: 12) {
+            Card {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("周中 \(ClockFormatter.hoursText(Double(store.schedule.weekdayPlannedMinutes) / 60))")
+                            .font(.subheadline.weight(.semibold))
+                        Text("周日 \(ClockFormatter.hoursText(Double(store.schedule.sundayPlannedMinutes) / 60))")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.secondaryLabel)
+                    }
+                    Spacer()
+                    NavigationLink {
+                        ScheduleEditorView(initial: store.schedule)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("编辑")
+                                .font(.footnote.weight(.medium))
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.system(size: 11))
+                        }
+                        .foregroundStyle(Theme.accent)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Theme.accent.opacity(0.10))
+                        .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            scheduleGroup(title: "周一至周六", blocks: store.schedule.weekday)
+            scheduleGroup(title: "周日", blocks: store.schedule.sunday)
+        }
+    }
+
+    private func scheduleGroup(title: String, blocks: [ScheduleBlock]) -> some View {
+        Card(padding: 0) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+
+                Divider().padding(.leading, 14)
+
+                ForEach(Array(blocks.enumerated()), id: \.element.id) { index, block in
+                    HStack(spacing: 10) {
+                        Text(ClockFormatter.hhmm(block.startMinute))
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(block.kind.countsAsStudy ? Theme.accent : Theme.tertiaryLabel)
+                            .frame(width: 46, alignment: .leading)
+
+                        Text(block.title)
+                            .font(.footnote)
+                            .foregroundStyle(block.kind.countsAsStudy ? Theme.label : Theme.secondaryLabel)
+
+                        Spacer(minLength: 0)
+
+                        if block.kind.countsAsStudy {
+                            Text(ClockFormatter.hoursText(block.durationHours))
+                                .font(.system(size: 11))
+                                .foregroundStyle(Theme.tertiaryLabel)
+                        }
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 9)
+
+                    if index < blocks.count - 1 {
+                        Divider().padding(.leading, 70)
+                    }
+                }
+            }
         }
     }
 
