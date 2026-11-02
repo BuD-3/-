@@ -15,6 +15,9 @@ struct TodayView: View {
     /// 自动化截图用：xcrun simctl launch ... --flip-stage 时直接显示背面
     @State private var stageCardFlipped = ProcessInfo.processInfo.arguments.contains("--flip-stage")
 
+    /// 课表卡翻转状态（--flip-timetable 供截图）
+    @State private var timetableFlipped = ProcessInfo.processInfo.arguments.contains("--flip-timetable")
+
     private var today: Date { Date() }
     private var blocks: [ScheduleBlock] { DailySchedule.blocks(for: today) }
     private var completed: Set<String> { store.completedBlocks(on: today) }
@@ -299,6 +302,14 @@ struct TodayView: View {
                     Text(month?.title ?? "—")
                         .font(.footnote)
                         .foregroundStyle(Theme.tertiaryLabel)
+                    Button {
+                        stageCardFlipped = false
+                    } label: {
+                        Image(systemName: "chevron.up")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Theme.accent)
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 Divider()
@@ -395,25 +406,136 @@ struct TodayView: View {
 
     // MARK: - 今日课表
 
+    // MARK: - 今日课表（翻转：正面只看当前 + 下一件）
+
     private var timetableCard: some View {
+        FlipCard(isFlipped: $timetableFlipped) {
+            timetableFront
+        } back: {
+            timetableBack
+        }
+    }
+
+    /// 正面：现在做什么、接着做什么
+    private var timetableFront: some View {
         Card {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text("今日课表")
                             .font(.headline)
-                        Text("已完成 \(ClockFormatter.hoursText(studiedHours)) / 计划 \(ClockFormatter.hoursText(plannedHours))")
+                        Text("已完成 \(completedBlockCount)/\(blocks.count) 段")
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryLabel)
                     }
                     Spacer()
                     ZStack {
                         RingProgress(value: ratio, tint: Theme.accent, lineWidth: 5)
-                            .frame(width: 44, height: 44)
+                            .frame(width: 40, height: 40)
                         Text(ClockFormatter.percent(ratio))
                             .font(.system(size: 11, weight: .bold, design: .rounded))
                             .foregroundStyle(Theme.accent)
                     }
+                }
+
+                if let current = currentBlock {
+                    timetableFocusRow(current, label: "进行中", emphasized: true)
+                }
+                if let next = nextBlock {
+                    timetableFocusRow(next, label: "接下来", emphasized: false)
+                }
+                if currentBlock == nil && nextBlock == nil {
+                    Text("今天的课表已全部结束")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.secondaryLabel)
+                }
+
+                HStack(spacing: 4) {
+                    Text("查看全部 \(blocks.count) 段")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Theme.tertiaryLabel)
+                    Image(systemName: "rotate.3d")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Theme.tertiaryLabel)
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+    }
+
+    /// 当前时间落在哪一段
+    private var currentMinute: Int {
+        let c = CalendarHelper.shared.dateComponents([.hour, .minute], from: Date())
+        return (c.hour ?? 0) * 60 + (c.minute ?? 0)
+    }
+
+    private var currentBlock: ScheduleBlock? {
+        blocks.first { currentMinute >= $0.startMinute && currentMinute < $0.endMinute }
+    }
+
+    private var nextBlock: ScheduleBlock? {
+        if let current = currentBlock {
+            return blocks.first { $0.startMinute >= current.endMinute }
+        }
+        return blocks.first { $0.startMinute > currentMinute }
+    }
+
+    private func timetableFocusRow(_ block: ScheduleBlock, label: String, emphasized: Bool) -> some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(ClockFormatter.hhmm(block.startMinute))
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(emphasized ? Theme.accent : Theme.secondaryLabel)
+                Text(ClockFormatter.hhmm(block.endMinute))
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.tertiaryLabel)
+            }
+            .frame(width: 44, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(block.title)
+                    .font(emphasized ? .subheadline.weight(.semibold) : .subheadline)
+                    .foregroundStyle(emphasized ? Theme.label : Theme.secondaryLabel)
+                    .lineLimit(2)
+                Text(label)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(emphasized ? Theme.accent : Theme.tertiaryLabel)
+            }
+
+            Spacer(minLength: 0)
+
+            if block.kind.countsAsStudy {
+                Text(ClockFormatter.hoursText(block.durationHours))
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.tertiaryLabel)
+            }
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 10)
+        .background(emphasized ? Theme.accent.opacity(0.07) : Color.clear)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    /// 背面：当天全部时段
+    private var timetableBack: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("今日全部 \(blocks.count) 段")
+                        .font(.headline)
+                    Spacer()
+                    Button {
+                        timetableFlipped = false
+                    } label: {
+                        HStack(spacing: 3) {
+                            Text("收起")
+                                .font(.system(size: 12, weight: .medium))
+                            Image(systemName: "chevron.up")
+                                .font(.system(size: 10, weight: .semibold))
+                        }
+                        .foregroundStyle(Theme.accent)
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 VStack(spacing: 0) {

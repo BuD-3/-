@@ -50,7 +50,11 @@ struct FlipCard<Front: View, Back: View>: View {
         )
         .animation(.easeInOut(duration: 0.2), value: showingBack)
         .contentShape(Rectangle())
-        .onTapGesture { toggle() }
+        // 只在正面响应「点一下翻面」：背面通常有自己的交互（课表打勾），
+        // 背面由调用方放「收起」按钮翻回来。
+        .onTapGesture {
+            if !showingBack { toggle() }
+        }
         .onChange(of: isFlipped) { _, newValue in
             // 外部状态变了（比如其他地方重置），同步过来
             if newValue != showingBack {
