@@ -217,6 +217,13 @@ jobs:
           sleep 6
           xcrun simctl io "$DEVICE" screenshot "screenshots/11-timetable-back.png"
 
+          echo "--- 截取 12-plan-schedule (计划页课表分段) ---"
+          xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
+          sleep 1
+          xcrun simctl launch "$DEVICE" "$BUNDLE" --tab 1 --plan-seg 3
+          sleep 6
+          xcrun simctl io "$DEVICE" screenshot "screenshots/12-plan-schedule.png"
+
           echo "--- 截取 08-home (桌面图标) ---"
           xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
           sleep 4
