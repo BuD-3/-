@@ -124,18 +124,20 @@ struct HealthView: View {
                             )
                         }
                         if entry.exerciseDistance > 0 {
-                        healthRow(symbol: "point.topleft.down.curvedto.point.bottomright.up",
-                                  title: "距离",
-                                  value: String(format: "%.1f 公里", entry.exerciseDistance))
-                    }
+                            healthRow(symbol: "point.topleft.down.curvedto.point.bottomright.up",
+                                      title: "距离",
+                                      value: String(format: "%.1f 公里", entry.exerciseDistance),
+                                      tint: Theme.accent)
+                        }
 
-                    if entry.exerciseReps > 0 {
-                        healthRow(symbol: "number.circle",
-                                  title: "个数",
-                                  value: "\(entry.exerciseReps) 个")
-                    }
+                        if entry.exerciseReps > 0 {
+                            healthRow(symbol: "number.circle",
+                                      title: "个数",
+                                      value: "\(entry.exerciseReps) 个",
+                                      tint: Color(red: 0.30, green: 0.65, blue: 0.42))
+                        }
 
-                    if entry.walkedMinutes > 0 {
+                        if entry.walkedMinutes > 0 {
                             healthRow(symbol: "figure.walk",
                                       title: "散步",
                                       value: ClockFormatter.minutesText(entry.walkedMinutes),
